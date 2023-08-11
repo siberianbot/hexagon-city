@@ -4,9 +4,12 @@
 #include <Penrose/Assets/AssetDictionary.hpp>
 #include <Penrose/Assets/AssetManager.hpp>
 #include <Penrose/Core/Engine.hpp>
+#include <Penrose/ECS/ECSManager.hpp>
 #include <Penrose/Rendering/RenderContext.hpp>
 
 #include <Penrose/Builtin/Rendering/ForwardSceneDrawRenderOperator.hpp>
+
+#include "src/BulidingComponent.hpp"
 
 using namespace Penrose;
 
@@ -56,6 +59,7 @@ int main() {
     engine.resources().get<AssetDictionary>()->addDir("data");
 
     auto assetManager = engine.resources().get<AssetManager>();
+    assetManager->queueMeshLoading("models/building.obj");
     assetManager->queueShaderLoading("shaders/default-forward-rendering.vert.spv");
     assetManager->queueShaderLoading("shaders/default-forward-rendering.frag.spv");
 
@@ -87,6 +91,9 @@ int main() {
 
     auto renderContext = engine.resources().get<RenderContext>();
     renderContext->setRenderGraph(graph);
+
+    auto ecsManager = engine.resources().get<ECSManager>();
+    ecsManager->registerComponent<BuildingComponent>();
 
     engine.run();
 
