@@ -1,13 +1,13 @@
 #include <exception>
 #include <iostream>
 
+#include <Penrose/Engine.hpp>
 #include <Penrose/Assets/AssetDictionary.hpp>
 #include <Penrose/Assets/AssetManager.hpp>
-#include <Penrose/Core/Engine.hpp>
 #include <Penrose/ECS/ECSManager.hpp>
-#include <Penrose/Rendering/RenderContext.hpp>
+#include <Penrose/Rendering/RenderGraphContext.hpp>
 
-#include <Penrose/Builtin/Rendering/ForwardSceneDrawRenderOperator.hpp>
+#include <Penrose/Builtin/Penrose/Rendering/ForwardSceneDrawRenderOperator.hpp>
 
 #include "src/BulidingComponent.hpp"
 
@@ -56,44 +56,44 @@ int main() {
 
     Engine engine;
 
+    engine.resources().add<BuildingComponentFactory, ComponentFactory>();
+
     engine.resources().get<AssetDictionary>()->addDir("data");
 
     auto assetManager = engine.resources().get<AssetManager>();
-    assetManager->queueMeshLoading("models/building.obj");
-    assetManager->queueShaderLoading("shaders/default-forward-rendering.vert.spv");
-    assetManager->queueShaderLoading("shaders/default-forward-rendering.frag.spv");
+    assetManager->enqueue("models/building.asset");
+    assetManager->enqueue("shaders/default-forward-rendering.vert.asset");
+    assetManager->enqueue("shaders/default-forward-rendering.frag.asset");
 
-    auto graph = RenderGraph()
-            .setTarget("swapchain", RenderTarget::makeSwapchain())
-            .setTarget("depth", RenderTarget::makeImage(RenderTargetType::DepthStencil,
-                                                        RenderFormat::D32Float,
-                                                        std::nullopt))
-            .setSubgraph("default", RenderSubgraph()
-                    .addAttachment(RenderAttachment("swapchain")
-                                           .setClearValue(RenderAttachmentClearValue({0, 0, 0, 1}))
+    auto graph = RenderGraphInfo()
+            .setTarget("swapchain", RenderTargetInfo(RenderTargetSource::Swapchain))
+            .setTarget("depth", RenderTargetInfo(RenderTargetSource::Image,
+                                                 RenderTargetType::DepthStencil,
+                                                 RenderFormat::D32Float,
+                                                 std::nullopt))
+            .setSubgraph("default", RenderSubgraphInfo()
+                    .addAttachment(RenderAttachmentInfo("swapchain")
+                                           .setClearValue(RenderAttachmentClearValueInfo({0, 0, 0, 1}))
                                            .setLoadOp(RenderAttachmentLoadOp::Clear)
                                            .setStoreOp(RenderAttachmentStoreOp::Store)
                                            .setInitialLayout(RenderAttachmentLayout::Undefined)
                                            .setFinalLayout(RenderAttachmentLayout::Present))
-                    .addAttachment(RenderAttachment("depth")
+                    .addAttachment(RenderAttachmentInfo("depth")
                                            .setFormat(RenderFormat::D32Float)
-                                           .setClearValue(RenderAttachmentClearValue().setDepth(1))
+                                           .setClearValue(RenderAttachmentClearValueInfo().setDepth(1))
                                            .setLoadOp(RenderAttachmentLoadOp::Clear)
                                            .setStoreOp(RenderAttachmentStoreOp::Store)
                                            .setInitialLayout(RenderAttachmentLayout::Undefined)
                                            .setFinalLayout(RenderAttachmentLayout::DepthStencilAttachment))
-                    .addPass(RenderPass()
+                    .addPass(RenderSubgraphPassInfo()
                                      .addColorAttachmentIdx(0)
                                      .setDepthStencilAttachment(1)
-                                     .setOperator(RenderPassOperator(
+                                     .setOperatorInfo(RenderOperatorInfo(
                                              std::string(ForwardSceneDrawRenderOperator::NAME))))
             );
 
-    auto renderContext = engine.resources().get<RenderContext>();
+    auto renderContext = engine.resources().get<RenderGraphContext>();
     renderContext->setRenderGraph(graph);
-
-    auto ecsManager = engine.resources().get<ECSManager>();
-    ecsManager->registerComponent<BuildingComponent>();
 
     engine.run();
 
