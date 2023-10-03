@@ -6,6 +6,7 @@
 #include <Penrose/Builtin/Penrose/ECS/TransformComponent.hpp>
 
 #include "src/BulidingComponent.hpp"
+#include "src/RayCollisionVolumeComponent.hpp"
 
 DebugCityGenerationSystem::DebugCityGenerationSystem(ResourceSet *resources)
         : _ecsManager(resources->getLazy<ECSManager>()),
@@ -39,6 +40,8 @@ void DebugCityGenerationSystem::init() {
         building->getRow() = row;
         building->getColumn() = column;
         building->getLevel() = 1;
+
+        this->_ecsManager->addComponent<RayCollisionVolumeComponent>(entity);
 
         this->_sceneManager->insertEntityNode(root, entity);
     }

@@ -14,6 +14,7 @@ deps = [
 src = [
     'src/DebugCameraSystem.cpp',
     'src/DebugCityGenerationSystem.cpp',
+    'src/Raycaster.cpp',
     'src/Main.cpp',
 ]
 

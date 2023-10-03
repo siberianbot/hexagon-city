@@ -20,6 +20,8 @@
 
 #include <Penrose/Builtin/Penrose/ECS/TransformComponent.hpp>
 
+#include "src/Raycaster.hpp"
+
 using namespace Penrose;
 
 class DebugCameraSystem : public Resource, public Initializable, public System {
@@ -50,6 +52,7 @@ private:
     Lazy<ECSManager> _ecsManager;
     Lazy<EventQueue> _eventQueue;
     Lazy<InputHandler> _inputHandler;
+    Lazy<Raycaster> _raycaster;
     Lazy<SceneManager> _sceneManager;
     Lazy<SurfaceManager> _surfaceManager;
 

@@ -6,6 +6,7 @@
 
 #include <Penrose/Events/InputEvent.hpp>
 
+#include <Penrose/Builtin/Penrose/ECS/MeshRendererComponent.hpp>
 #include <Penrose/Builtin/Penrose/ECS/PerspectiveCameraComponent.hpp>
 #include <Penrose/Builtin/Penrose/ECS/ViewComponent.hpp>
 
@@ -29,9 +30,10 @@ DebugCameraSystem::DebugCameraSystem(ResourceSet *resources)
         : _ecsManager(resources->getLazy<ECSManager>()),
           _eventQueue(resources->getLazy<EventQueue>()),
           _inputHandler(resources->getLazy<InputHandler>()),
+          _raycaster(resources->getLazy<Raycaster>()),
           _sceneManager(resources->getLazy<SceneManager>()),
           _surfaceManager(resources->getLazy<SurfaceManager>()) {
-    //
+//
 }
 
 void DebugCameraSystem::init() {
@@ -66,16 +68,55 @@ void DebugCameraSystem::init() {
                     case InputEventType::KeyStateUpdated: {
                         auto [key, state] = event->getArgs().keyState;
 
+                        if (state != InputState::Pressed) {
+                            return;
+                        }
+
                         switch (key) {
-                            case InputKey::Escape:
-                                this->_currentCamera->state = CameraState::Unfocused;
-                                this->_surfaceManager->getSurface()->unlockCursor();
+                            case InputKey::F1:
+                                switch (this->_currentCamera->state) {
+                                    case CameraState::Unfocused:
+                                        this->_currentCamera->state = CameraState::Focused;
+                                        this->_surfaceManager->getSurface()->lockCursor();
+                                        break;
+
+                                    case CameraState::Focused:
+                                        this->_currentCamera->state = CameraState::Unfocused;
+                                        this->_surfaceManager->getSurface()->unlockCursor();
+                                        break;
+
+                                    default:
+                                        break;
+                                }
+
                                 break;
 
-                            case InputKey::MB0:
-                                this->_currentCamera->state = CameraState::Focused;
-                                this->_surfaceManager->getSurface()->lockCursor();
+                            case InputKey::MB0: {
+                                if (this->_currentCamera->state != CameraState::Focused) {
+                                    return;
+                                }
+
+                                auto rotation = glm::rotate(glm::mat4(1), this->_currentCamera->transform->getRot().y,
+                                                            glm::vec3(0, 1, 0)) *
+                                                glm::rotate(glm::mat4(1), this->_currentCamera->transform->getRot().x,
+                                                            glm::vec3(1, 0, 0)) *
+                                                glm::rotate(glm::mat4(1), this->_currentCamera->transform->getRot().z,
+                                                            glm::vec3(0, 0, 1));
+
+                                auto forward = glm::vec3(rotation * glm::vec4(1, 0, 0, 1));
+
+                                auto maybeEntity = this->_raycaster->collide(this->_currentCamera->transform->getPos(),
+                                                                             forward);
+
+                                if (!maybeEntity.has_value()) {
+                                    return;
+                                }
+
+                                this->_ecsManager->getComponent<MeshRendererComponent>(*maybeEntity)->setColor(
+                                        glm::vec3(0.7, 0.1, 0.1));
+
                                 break;
+                            }
 
                             default:
                                 break;
