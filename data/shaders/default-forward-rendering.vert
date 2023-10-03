@@ -8,6 +8,7 @@ struct ModelData {
 layout (push_constant) uniform RenderData {
     mat4 matrix;
     ModelData model;
+    vec3 color;
 } data;
 
 layout (location = 0) in vec3 inPos;
@@ -25,6 +26,6 @@ void main() {
 
     outPos = (data.model.matrix * vec4(inPos, 1)).xyz;
     outNormal = (data.model.rotOnly * vec4(inNormal, 1)).xyz;
-    outColor = inColor;
+    outColor = data.color * inColor;
     outUV = inUV;
 }

@@ -10,6 +10,8 @@
 #include <Penrose/Builtin/Penrose/Rendering/ForwardSceneDrawRenderOperator.hpp>
 
 #include "src/BulidingComponent.hpp"
+#include "src/DebugCameraSystem.hpp"
+#include "src/DebugCityGenerationSystem.hpp"
 
 using namespace Penrose;
 
@@ -57,11 +59,14 @@ int main() {
     Engine engine;
 
     engine.resources().add<BuildingComponentFactory, ComponentFactory>();
+    engine.resources().add<DebugCameraSystem, System>();
+    engine.resources().add<DebugCityGenerationSystem, System>();
 
     engine.resources().get<AssetDictionary>()->addDir("data");
 
     auto assetManager = engine.resources().get<AssetManager>();
     assetManager->enqueue("models/building.asset");
+    assetManager->enqueue("textures/building.asset");
     assetManager->enqueue("shaders/default-forward-rendering.vert.asset");
     assetManager->enqueue("shaders/default-forward-rendering.frag.asset");
 

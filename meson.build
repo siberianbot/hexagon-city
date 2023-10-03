@@ -12,7 +12,9 @@ deps = [
 ]
 
 src = [
-    'src/Main.cpp'
+    'src/DebugCameraSystem.cpp',
+    'src/DebugCityGenerationSystem.cpp',
+    'src/Main.cpp',
 ]
 
 executable('hexagon_city', src, dependencies: deps)
