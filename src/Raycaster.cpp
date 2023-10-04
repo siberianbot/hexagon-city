@@ -1,7 +1,10 @@
 #include "Raycaster.hpp"
 
+#include <map>
 #include <ranges>
 #include <tuple>
+
+#include <glm/geometric.hpp>
 
 #include <Penrose/Builtin/Penrose/ECS/TransformComponent.hpp>
 
@@ -31,42 +34,62 @@ std::optional<Entity> Raycaster::collide(const glm::vec3 &position, const glm::v
                           auto transform = this->_ecsManager->getComponent<TransformComponent>(entry.entity);
 
                           return std::make_tuple(entry.entity, transform);
+                      }) |
+                      std::views::filter([&](const std::tuple<Entity, std::shared_ptr<TransformComponent>> &tuple) {
+                          const auto &[entity, transform] = tuple;
+
+                          auto boxMin = transform->getPos() - transform->getScale();
+                          auto boxMax = transform->getPos() + transform->getScale();
+
+                          auto result = glm::vec3(-1);
+
+                          for (glm::vec3::length_type idx = 0; idx < 3; idx++) {
+                              if (direction[idx] > 0) {
+                                  result[idx] = (boxMin[idx] - position[idx]) / direction[idx];
+                              } else if (direction[idx] < 0) {
+                                  result[idx] = (boxMax[idx] - position[idx]) / direction[idx];
+                              }
+                          }
+
+                          auto maximum = max(result.x, result.y, result.z);
+
+                          if (maximum < 0) {
+                              return false;
+                          }
+
+                          auto intersection = position + (direction * maximum);
+                          const float eps = 0.0001f;
+
+                          bool matched = true;
+                          for (glm::vec3::length_type idx = 0; idx < 3; idx++) {
+                              if (intersection[idx] + eps < boxMin[idx] || intersection[idx] - eps > boxMax[idx]) {
+                                  matched = false;
+                              }
+                          }
+
+                          return matched;
+                      }) |
+                      std::views::transform([&](const std::tuple<Entity, std::shared_ptr<TransformComponent>> &tuple) {
+                          const auto &[entity, transform] = tuple;
+
+                          return std::make_tuple(entity, glm::length(position - transform->getPos()));
                       });
 
-    for (const auto &[entity, transform]: candidates) {
-        auto boxMin = transform->getPos() - transform->getScale();
-        auto boxMax = transform->getPos() + transform->getScale();
+    std::map<Entity, float> entityDistances;
+    for (const auto &[entity, distance]: candidates) {
+        entityDistances.emplace(entity, distance);
+    }
 
-        auto result = glm::vec3(-1);
+    if (entityDistances.empty()) {
+        return std::nullopt;
+    }
 
-        for (glm::vec3::length_type idx = 0; idx < 3; idx++) {
-            if (direction[idx] > 0) {
-                result[idx] = (boxMin[idx] - position[idx]) / direction[idx];
-            } else if (direction[idx] < 0) {
-                result[idx] = (boxMax[idx] - position[idx]) / direction[idx];
-            }
-        }
-
-        auto maximum = max(result.x, result.y, result.z);
-
-        if (maximum < 0) {
-            continue;
-        }
-
-        auto intersection = position + (direction * maximum);
-        const float eps = 0.0001f;
-
-        bool matched = true;
-        for (glm::vec3::length_type idx = 0; idx < 3; idx++) {
-            if (intersection[idx] + eps < boxMin[idx] || intersection[idx] - eps > boxMax[idx]) {
-                matched = false;
-            }
-        }
-
-        if (matched) {
-            return entity;
+    auto goodEntity = entityDistances.begin()->first;
+    for (const auto &[entity, distance]: entityDistances) {
+        if (entityDistances[goodEntity] > distance) {
+            goodEntity = entity;
         }
     }
 
-    return std::nullopt;
+    return goodEntity;
 }

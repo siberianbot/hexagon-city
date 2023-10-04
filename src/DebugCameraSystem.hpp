@@ -5,7 +5,6 @@
 #include <optional>
 #include <tuple>
 
-#include <Penrose/Common/Log.hpp>
 #include <Penrose/ECS/Entity.hpp>
 #include <Penrose/ECS/System.hpp>
 #include <Penrose/ECS/ECSManager.hpp>
@@ -18,6 +17,7 @@
 #include <Penrose/Resources/ResourceSet.hpp>
 #include <Penrose/Scene/SceneManager.hpp>
 
+#include <Penrose/Builtin/Penrose/ECS/PerspectiveCameraComponent.hpp>
 #include <Penrose/Builtin/Penrose/ECS/TransformComponent.hpp>
 
 #include "src/Raycaster.hpp"
@@ -45,6 +45,7 @@ private:
     struct Camera {
         Entity entity;
         std::tuple<float, float> rotation;
+        std::shared_ptr<PerspectiveCameraComponent> perspective;
         std::shared_ptr<TransformComponent> transform;
         CameraState state;
     };

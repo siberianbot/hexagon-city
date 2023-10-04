@@ -7,7 +7,6 @@
 #include <Penrose/Events/InputEvent.hpp>
 
 #include <Penrose/Builtin/Penrose/ECS/MeshRendererComponent.hpp>
-#include <Penrose/Builtin/Penrose/ECS/PerspectiveCameraComponent.hpp>
 #include <Penrose/Builtin/Penrose/ECS/ViewComponent.hpp>
 
 // TODO: better naming required
@@ -45,12 +44,13 @@ void DebugCameraSystem::init() {
     transform->getPos() = glm::vec3(6);
     transform->getRot() = glm::vec3(0, glm::radians(135.0f), glm::radians(-45.0f));
 
-    this->_ecsManager->addComponent<PerspectiveCameraComponent>(entity);
+    auto perspective = this->_ecsManager->addComponent<PerspectiveCameraComponent>(entity);
     this->_ecsManager->addComponent<ViewComponent>(entity);
 
     this->_currentCamera = Camera{
             .entity = entity,
             .rotation = {glm::radians(45.0f), glm::radians(-45.0f)},
+            .perspective = perspective,
             .transform = transform,
             .state = CameraState::Unfocused
     };
@@ -92,9 +92,27 @@ void DebugCameraSystem::init() {
                                 break;
 
                             case InputKey::MB0: {
-                                if (this->_currentCamera->state != CameraState::Focused) {
+                                if (this->_currentCamera->state != CameraState::Unfocused) {
                                     return;
                                 }
+
+                                auto [w, h] = this->_surfaceManager->getSurface()->getSize();
+                                auto [x, y] = this->_inputHandler->getCurrentMousePosition();
+
+                                auto n = glm::vec4(x, y, 2 * this->_currentCamera->perspective->getNear() - 1, 1);
+
+                                auto projection = glm::perspective(
+                                        this->_currentCamera->perspective->getFov(),
+                                        static_cast<float>(w) / static_cast<float>(h),
+                                        this->_currentCamera->perspective->getNear(),
+                                        this->_currentCamera->perspective->getFar()
+                                );
+
+                                auto projectionInverse = glm::inverse(projection);
+
+                                auto v = projectionInverse * n;
+
+                                v = v / v.w;
 
                                 auto rotation = glm::rotate(glm::mat4(1), this->_currentCamera->transform->getRot().y,
                                                             glm::vec3(0, 1, 0)) *
@@ -104,9 +122,19 @@ void DebugCameraSystem::init() {
                                                             glm::vec3(0, 0, 1));
 
                                 auto forward = glm::vec3(rotation * glm::vec4(1, 0, 0, 1));
+                                auto up = glm::vec3(rotation * glm::vec4(0, 1, 0, 1));
 
-                                auto maybeEntity = this->_raycaster->collide(this->_currentCamera->transform->getPos(),
-                                                                             forward);
+                                auto view = glm::lookAt(this->_currentCamera->transform->getPos(),
+                                                        this->_currentCamera->transform->getPos() + forward, up);
+
+                                auto viewInverse = glm::inverse(view);
+
+                                auto world = viewInverse * v;
+
+                                auto position = glm::vec4(this->_currentCamera->transform->getPos(), 1);
+                                auto direction = world - position;
+
+                                auto maybeEntity = this->_raycaster->collide(position, direction);
 
                                 if (!maybeEntity.has_value()) {
                                     return;
@@ -135,7 +163,7 @@ void DebugCameraSystem::init() {
 
                         this->_currentCamera->rotation = {
                                 anticlamp(phi - dx, 0.0f, 2 * static_cast<float>(M_PI)),
-                                std::clamp(theta - dy, -static_cast<float>(M_PI_2), static_cast<float>(M_PI_2))
+                                std::clamp(theta + dy, -static_cast<float>(M_PI_2), static_cast<float>(M_PI_2))
                         };
 
                         break;

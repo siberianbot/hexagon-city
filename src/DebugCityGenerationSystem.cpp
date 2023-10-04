@@ -1,6 +1,8 @@
 #include "DebugCityGenerationSystem.hpp"
 
 #include <random>
+#include <set>
+#include <tuple>
 
 #include <Penrose/Builtin/Penrose/ECS/MeshRendererComponent.hpp>
 #include <Penrose/Builtin/Penrose/ECS/TransformComponent.hpp>
@@ -21,9 +23,22 @@ void DebugCityGenerationSystem::init() {
     auto randomEngine = std::default_random_engine(randomDevice());
     auto distribution = std::uniform_int_distribution(-3, 3);
 
+    std::set<std::tuple<int, int>> placed;
+
     for (std::uint32_t n = 0; n < 16; n++) {
-        auto row = distribution(randomEngine);
-        auto column = distribution(randomEngine);
+
+        int row;
+        int column;
+        std::tuple<int, int> place;
+
+        do {
+            row = distribution(randomEngine);
+            column = distribution(randomEngine);
+
+            place = std::make_tuple(row, column);
+        } while (placed.contains(place));
+
+        placed.insert(place);
 
         auto entity = this->_ecsManager->createEntity();
 
