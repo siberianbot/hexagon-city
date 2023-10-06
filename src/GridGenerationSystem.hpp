@@ -1,5 +1,5 @@
-#ifndef HEXAGON_CITY_DEBUG_CITY_GENERATION_SYSTEM_HPP
-#define HEXAGON_CITY_DEBUG_CITY_GENERATION_SYSTEM_HPP
+#ifndef HEXAGON_CITY_GRID_GENERATION_SYSTEM_HPP
+#define HEXAGON_CITY_GRID_GENERATION_SYSTEM_HPP
 
 #include <Penrose/ECS/System.hpp>
 #include <Penrose/ECS/ECSManager.hpp>
@@ -11,10 +11,10 @@
 
 using namespace Penrose;
 
-class DebugCityGenerationSystem : public Resource, public Initializable, public System {
+class GridGenerationSystem : public Resource, public Initializable, public System {
 public:
-    explicit DebugCityGenerationSystem(ResourceSet *resources);
-    ~DebugCityGenerationSystem() override = default;
+    explicit GridGenerationSystem(ResourceSet *resources);
+    ~GridGenerationSystem() override = default;
 
     void init() override;
 
@@ -22,12 +22,11 @@ public:
 
     void update(float) override { /* nothing to do */ }
 
-    [[nodiscard]] std::string getName() const override { return "CityGeneration"; }
+    [[nodiscard]] std::string getName() const override { return "GridGeneration"; }
 
 private:
     Lazy<ECSManager> _ecsManager;
     Lazy<SceneManager> _sceneManager;
 };
 
-
-#endif // HEXAGON_CITY_DEBUG_CITY_GENERATION_SYSTEM_HPP
+#endif // HEXAGON_CITY_GRID_GENERATION_SYSTEM_HPP

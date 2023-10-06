@@ -41,8 +41,8 @@ void DebugCameraSystem::init() {
     auto entity = this->_ecsManager->createEntity();
 
     auto transform = this->_ecsManager->addComponent<TransformComponent>(entity);
-    transform->getPos() = glm::vec3(6);
-    transform->getRot() = glm::vec3(0, glm::radians(135.0f), glm::radians(-45.0f));
+    transform->getPos() = glm::vec3(-1, 6, -1);
+    transform->getRot() = glm::vec3(0, glm::radians(-30.0f), glm::radians(-45.0f));
 
     auto perspective = this->_ecsManager->addComponent<PerspectiveCameraComponent>(entity);
     this->_ecsManager->addComponent<ViewComponent>(entity);

@@ -11,7 +11,8 @@
 
 #include "src/BulidingComponent.hpp"
 #include "src/DebugCameraSystem.hpp"
-#include "src/DebugCityGenerationSystem.hpp"
+#include "src/GridCellComponent.hpp"
+#include "src/GridGenerationSystem.hpp"
 #include "src/Raycaster.hpp"
 #include "src/RayCollisionVolumeComponent.hpp"
 
@@ -61,9 +62,10 @@ int main() {
     Engine engine;
 
     engine.resources().add<BuildingComponentFactory, ComponentFactory>();
+    engine.resources().add<GridCellComponentFactory, ComponentFactory>();
     engine.resources().add<RayCollisionVolumeComponentFactory, ComponentFactory>();
     engine.resources().add<DebugCameraSystem, System>();
-    engine.resources().add<DebugCityGenerationSystem, System>();
+    engine.resources().add<GridGenerationSystem, System>();
     engine.resources().add<Raycaster>();
 
     engine.resources().get<AssetDictionary>()->addDir("data");
