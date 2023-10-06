@@ -15,6 +15,7 @@
 #include "src/GridGenerationSystem.hpp"
 #include "src/Raycaster.hpp"
 #include "src/RayCollisionVolumeComponent.hpp"
+#include "src/SelectionSystem.hpp"
 
 using namespace Penrose;
 
@@ -66,6 +67,7 @@ int main() {
     engine.resources().add<RayCollisionVolumeComponentFactory, ComponentFactory>();
     engine.resources().add<DebugCameraSystem, System>();
     engine.resources().add<GridGenerationSystem, System>();
+    engine.resources().add<SelectionSystem, System>();
     engine.resources().add<Raycaster>();
 
     engine.resources().get<AssetDictionary>()->addDir("data");

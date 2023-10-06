@@ -15,6 +15,7 @@ src = [
     'src/DebugCameraSystem.cpp',
     'src/GridGenerationSystem.cpp',
     'src/Raycaster.cpp',
+    'src/SelectionSystem.cpp',
     'src/Main.cpp',
 ]
 

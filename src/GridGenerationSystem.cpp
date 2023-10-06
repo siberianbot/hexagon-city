@@ -10,25 +10,11 @@
 #include <Penrose/Builtin/Penrose/ECS/TransformComponent.hpp>
 
 #include "src/GridCellComponent.hpp"
+#include "src/GridConstants.hpp"
 #include "src/RayCollisionVolumeComponent.hpp"
 
 constexpr static const std::uint32_t GRID_WIDTH = 16;
 constexpr static const std::uint32_t GRID_HEIGHT = 16;
-
-constexpr glm::vec3 rgb(double r, double g, double b) {
-    return {
-            r / 255,
-            g / 255,
-            b / 255
-    };
-}
-
-constexpr static const std::array<glm::vec3, 4> GRID_CELL_COLORS = {
-        rgb(224, 224, 224), // concrete
-        rgb(33, 207, 97),   // grass
-        rgb(227, 216, 159), // sand
-        rgb(56, 169, 217),  // water
-};
 
 constexpr static const float GRID_CELL_RADIUS = 0.5f;
 constexpr static const float GRID_CELL_DIAMETER = 2 * GRID_CELL_RADIUS;

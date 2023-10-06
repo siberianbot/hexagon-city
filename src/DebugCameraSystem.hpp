@@ -26,17 +26,6 @@ using namespace Penrose;
 
 class DebugCameraSystem : public Resource, public Initializable, public System {
 public:
-    explicit DebugCameraSystem(ResourceSet *resources);
-    ~DebugCameraSystem() override = default;
-
-    void init() override;
-    void destroy() override;
-
-    void update(float delta) override;
-
-    [[nodiscard]] std::string getName() const override { return "DebugCamera"; }
-
-private:
     enum class CameraState {
         Unfocused,
         Focused
@@ -50,10 +39,22 @@ private:
         CameraState state;
     };
 
+    explicit DebugCameraSystem(ResourceSet *resources);
+    ~DebugCameraSystem() override = default;
+
+    void init() override;
+    void destroy() override;
+
+    void update(float delta) override;
+
+    [[nodiscard]] std::string getName() const override { return "DebugCamera"; }
+
+    [[nodiscard]] const Camera &getCurrentCamera() const { return (*this->_currentCamera); }
+
+private:
     Lazy<ECSManager> _ecsManager;
     Lazy<EventQueue> _eventQueue;
     Lazy<InputHandler> _inputHandler;
-    Lazy<Raycaster> _raycaster;
     Lazy<SceneManager> _sceneManager;
     Lazy<SurfaceManager> _surfaceManager;
 
