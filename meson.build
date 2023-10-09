@@ -13,6 +13,7 @@ deps = [
 
 src = [
     'src/DebugCameraSystem.cpp',
+    'src/GridDrawableProvider.cpp',
     'src/GridGenerationSystem.cpp',
     'src/Raycaster.cpp',
     'src/SelectionSystem.cpp',

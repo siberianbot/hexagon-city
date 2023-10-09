@@ -23,21 +23,15 @@ class GridCellComponent : public Component {
 public:
     ~GridCellComponent() override = default;
 
-    [[nodiscard]] std::uint32_t &getColumn() { return this->_column; }
+    [[nodiscard]] GridCellType &type() { return this->_type; }
 
-    [[nodiscard]] std::uint32_t &getRow() { return this->_row; }
-
-    [[nodiscard]] GridCellType &getType() { return this->_type; }
-
-    [[nodiscard]] std::optional<Entity> &getBuilding() { return this->_building; }
+    [[nodiscard]] std::optional<Entity> &building() { return this->_building; }
 
     [[nodiscard]] std::string getName() const override { return name(); }
 
     [[nodiscard]] constexpr static std::string name() { return "GridCell"; }
 
 private:
-    std::uint32_t _column = 0;
-    std::uint32_t _row = 0;
     GridCellType _type;
     std::optional<Entity> _building;
 };

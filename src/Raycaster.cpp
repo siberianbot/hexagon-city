@@ -6,8 +6,10 @@
 
 #include <glm/geometric.hpp>
 
-#include <Penrose/Builtin/Penrose/ECS/TransformComponent.hpp>
-
+#include "src/GridBuildingComponent.hpp"
+#include "src/GridCellComponent.hpp"
+#include "src/GridConstants.hpp"
+#include "src/GridPositionComponent.hpp"
 #include "src/RayCollisionVolumeComponent.hpp"
 
 template<typename T>
@@ -30,16 +32,35 @@ std::optional<Entity> Raycaster::collide(const glm::vec3 &position, const glm::v
     auto query = ECSQuery().component<RayCollisionVolumeComponent>();
 
     auto candidates = this->_ecsManager->query(query) |
-                      std::views::transform([&](const ECSEntry &entry) {
-                          auto transform = this->_ecsManager->getComponent<TransformComponent>(entry.entity);
-
-                          return std::make_tuple(entry.entity, transform);
+                      std::views::filter([&](const ECSEntry &entry) {
+                          return this->_ecsManager->tryGetComponent<GridPositionComponent>(entry.entity).has_value();
                       }) |
-                      std::views::filter([&](const std::tuple<Entity, std::shared_ptr<TransformComponent>> &tuple) {
-                          const auto &[entity, transform] = tuple;
+                      std::views::transform([&](const ECSEntry &entry) {
+                          auto component = this->_ecsManager->getComponent<GridPositionComponent>(entry.entity);
+                          auto position = glm::vec3(sqrt(3) * component->column() + sqrt(3) / 2 * component->row(),
+                                                    0,
+                                                    3. / 2 * component->row());
 
-                          auto boxMin = transform->getPos() - transform->getScale();
-                          auto boxMax = transform->getPos() + transform->getScale();
+                          return std::make_tuple(entry.entity, position);
+                      }) |
+                      std::views::filter([&](const std::tuple<Entity, glm::vec3> &tuple) {
+                          const auto &[entity, entityPosition] = tuple;
+
+                          auto scale = glm::vec3(1);
+
+                          auto maybeBuilding = this->_ecsManager->tryGetComponent<GridBuildingComponent>(entity);
+                          auto maybeCell = this->_ecsManager->tryGetComponent<GridCellComponent>(entity);
+
+                          if (maybeBuilding.has_value()) {
+                              scale.y = (*maybeBuilding)->level() * GRID_BUILDING_PER_LEVEL_HEIGHT;
+                          }
+
+                          if (maybeCell.has_value()) {
+                              scale.y = GRID_CELL_HEIGHT;
+                          }
+
+                          auto boxMin = entityPosition - scale;
+                          auto boxMax = entityPosition + scale;
 
                           auto result = glm::vec3(-1);
 
@@ -69,10 +90,10 @@ std::optional<Entity> Raycaster::collide(const glm::vec3 &position, const glm::v
 
                           return matched;
                       }) |
-                      std::views::transform([&](const std::tuple<Entity, std::shared_ptr<TransformComponent>> &tuple) {
-                          const auto &[entity, transform] = tuple;
+                      std::views::transform([&](const std::tuple<Entity, glm::vec3> &tuple) {
+                          const auto &[entity, entityPosition] = tuple;
 
-                          return std::make_tuple(entity, glm::length(position - transform->getPos()));
+                          return std::make_tuple(entity, glm::length(position - entityPosition));
                       });
 
     std::map<Entity, float> entityDistances;

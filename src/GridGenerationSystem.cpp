@@ -1,23 +1,13 @@
 #include "GridGenerationSystem.hpp"
 
-#include <cstdint>
-#include <cmath>
 #include <random>
 
-#include <glm/vec3.hpp>
-
-#include <Penrose/Builtin/Penrose/ECS/MeshRendererComponent.hpp>
-#include <Penrose/Builtin/Penrose/ECS/TransformComponent.hpp>
-
 #include "src/GridCellComponent.hpp"
-#include "src/GridConstants.hpp"
+#include "src/GridPositionComponent.hpp"
 #include "src/RayCollisionVolumeComponent.hpp"
 
-constexpr static const std::uint32_t GRID_WIDTH = 16;
-constexpr static const std::uint32_t GRID_HEIGHT = 16;
-
-constexpr static const float GRID_CELL_RADIUS = 0.5f;
-constexpr static const float GRID_CELL_DIAMETER = 2 * GRID_CELL_RADIUS;
+constexpr static const std::int32_t GRID_WIDTH = 16;
+constexpr static const std::int32_t GRID_HEIGHT = 16;
 
 GridGenerationSystem::GridGenerationSystem(ResourceSet *resources)
         : _ecsManager(resources->getLazy<ECSManager>()),
@@ -32,29 +22,19 @@ void GridGenerationSystem::init() {
     auto randomEngine = std::default_random_engine(randomDevice());
     auto distribution = std::uniform_int_distribution(0, 3);
 
-    for (std::uint32_t row = 0; row < GRID_WIDTH; row++) {
-        for (std::uint32_t column = 0; column < GRID_HEIGHT; column++) {
+    for (std::int32_t row = 0; row < GRID_WIDTH; row++) {
+        for (std::int32_t column = 0; column < GRID_HEIGHT; column++) {
 
             auto type = distribution(randomEngine);
-
             auto entity = this->_ecsManager->createEntity();
 
-            auto transform = this->_ecsManager->addComponent<TransformComponent>(entity);
-            transform->getPos() = GRID_CELL_DIAMETER * glm::vec3(sqrt(3) * column + sqrt(3) / 2 * row,
-                                                                 0,
-                                                                 3. / 2 * row);
-            transform->getScale() = glm::vec3(1, 0.1, 1);
+            auto position = this->_ecsManager->addComponent<GridPositionComponent>(entity);
+            position->row() = row;
+            position->column() = column;
 
-            auto meshRenderer = this->_ecsManager->addComponent<MeshRendererComponent>(entity);
-            meshRenderer->setMeshAsset("models/building.asset");
-            meshRenderer->setAlbedoTextureAsset("textures/building.asset");
-            meshRenderer->setColor(GRID_CELL_COLORS[type]);
-
-            auto gridCell = this->_ecsManager->addComponent<GridCellComponent>(entity);
-            gridCell->getRow() = row;
-            gridCell->getColumn() = column;
-            gridCell->getType() = static_cast<GridCellType>(type);
-            gridCell->getBuilding() = std::nullopt;
+            auto cell = this->_ecsManager->addComponent<GridCellComponent>(entity);
+            cell->type() = static_cast<GridCellType>(type);
+            cell->building() = std::nullopt;
 
             this->_ecsManager->addComponent<RayCollisionVolumeComponent>(entity);
 

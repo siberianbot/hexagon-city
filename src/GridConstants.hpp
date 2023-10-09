@@ -13,13 +13,20 @@ constexpr glm::vec3 rgb(double r, double g, double b) {
     };
 }
 
+constexpr static const glm::vec3 GRID_SELECTED_COLOR = rgb(200, 50, 50);
+
+constexpr static const glm::vec3 GRID_BUILDING_COLOR = rgb(200, 200, 200);
+constexpr static const double GRID_BUILDING_PER_LEVEL_HEIGHT = 1.0;
+
 constexpr static const std::array<glm::vec3, 4> GRID_CELL_COLORS = {
         rgb(224, 224, 224), // concrete
         rgb(33, 207, 97),   // grass
         rgb(227, 216, 159), // sand
         rgb(56, 169, 217),  // water
 };
+constexpr static const double GRID_CELL_HEIGHT = 0.01;
 
-constexpr static const glm::vec3 GRID_CELL_SELECTED_COLOR = rgb(200, 50, 50);
+constexpr static const float GRID_CELL_RADIUS = 0.5f;
+constexpr static const float GRID_CELL_DIAMETER = 2 * GRID_CELL_RADIUS;
 
 #endif // HEXAGON_CITY_GRID_CONSTANTS_HPP

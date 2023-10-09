@@ -2,16 +2,11 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-#include <Penrose/Events/InputEvent.hpp>
-
-#include <Penrose/Builtin/Penrose/ECS/MeshRendererComponent.hpp>
-
-#include "src/GridCellComponent.hpp"
 #include "src/GridConstants.hpp"
+#include "src/SelectedComponent.hpp"
 
 SelectionSystem::SelectionSystem(ResourceSet *resources)
         : _ecsManager(resources->getLazy<ECSManager>()),
-          _eventQueue(resources->getLazy<EventQueue>()),
           _inputHandler(resources->getLazy<InputHandler>()),
           _raycaster(resources->getLazy<Raycaster>()),
           _surfaceManager(resources->getLazy<SurfaceManager>()),
@@ -19,18 +14,12 @@ SelectionSystem::SelectionSystem(ResourceSet *resources)
     //
 }
 
-void SelectionSystem::init() {
-    this->_eventHandlerIdx = this->_eventQueue->addHandler<EventType::InputEvent, InputEventArgs>(
-            [this](const InputEvent *event) {
-                // TODO
-            });
-}
-
-void SelectionSystem::destroy() {
-    this->_eventQueue->removeHandler(this->_eventHandlerIdx);
-}
-
 void SelectionSystem::update(float) {
+
+    if (this->_inputHandler->getCurrentStateOf(InputKey::MB0) != Penrose::InputState::Pressed) {
+        return;
+    }
+
     const auto &currentCamera = this->_cameraSystem->getCurrentCamera();
 
     auto [w, h] = this->_surfaceManager->getSurface()->getSize();
@@ -74,14 +63,11 @@ void SelectionSystem::update(float) {
     auto newSelection = this->_raycaster->collide(position, direction);
 
     if (this->_selection.has_value()) {
-        auto gridCell = this->_ecsManager->getComponent<GridCellComponent>(*this->_selection);
-        auto meshRenderer = this->_ecsManager->getComponent<MeshRendererComponent>(*this->_selection);
-
-        meshRenderer->setColor(GRID_CELL_COLORS.at(static_cast<std::uint32_t>(gridCell->getType())));
+        this->_ecsManager->removeComponent<SelectedComponent>(*this->_selection);
     }
 
     if (newSelection.has_value()) {
-        this->_ecsManager->getComponent<MeshRendererComponent>(*newSelection)->setColor(GRID_CELL_SELECTED_COLOR);
+        this->_ecsManager->addComponent<SelectedComponent>(*newSelection);
     }
 
     this->_selection = newSelection;

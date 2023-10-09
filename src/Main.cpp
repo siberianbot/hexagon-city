@@ -9,12 +9,15 @@
 
 #include <Penrose/Builtin/Penrose/Rendering/ForwardSceneDrawRenderOperator.hpp>
 
-#include "src/BulidingComponent.hpp"
 #include "src/DebugCameraSystem.hpp"
+#include "src/GridBuildingComponent.hpp"
 #include "src/GridCellComponent.hpp"
+#include "src/GridDrawableProvider.hpp"
 #include "src/GridGenerationSystem.hpp"
+#include "src/GridPositionComponent.hpp"
 #include "src/Raycaster.hpp"
 #include "src/RayCollisionVolumeComponent.hpp"
+#include "src/SelectedComponent.hpp"
 #include "src/SelectionSystem.hpp"
 
 using namespace Penrose;
@@ -62,12 +65,18 @@ int main() {
 
     Engine engine;
 
-    engine.resources().add<BuildingComponentFactory, ComponentFactory>();
+    engine.resources().add<GridBuildingComponentFactory, ComponentFactory>();
     engine.resources().add<GridCellComponentFactory, ComponentFactory>();
+    engine.resources().add<GridPositionComponentFactory, ComponentFactory>();
     engine.resources().add<RayCollisionVolumeComponentFactory, ComponentFactory>();
+    engine.resources().add<SelectedComponentFactory, ComponentFactory>();
+
     engine.resources().add<DebugCameraSystem, System>();
     engine.resources().add<GridGenerationSystem, System>();
     engine.resources().add<SelectionSystem, System>();
+
+    engine.resources().add<GridDrawableProvider, DrawableProvider>();
+
     engine.resources().add<Raycaster>();
 
     engine.resources().get<AssetDictionary>()->addDir("data");
