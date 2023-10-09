@@ -5,9 +5,11 @@
 #include "src/GridConstants.hpp"
 #include "src/HoveredComponent.hpp"
 #include "src/SelectedComponent.hpp"
+#include "src/SelectionChangedEvent.hpp"
 
 SelectionSystem::SelectionSystem(ResourceSet *resources)
         : _ecsManager(resources->getLazy<ECSManager>()),
+          _eventQueue(resources->getLazy<EventQueue>()),
           _inputHandler(resources->getLazy<InputHandler>()),
           _raycaster(resources->getLazy<Raycaster>()),
           _surfaceManager(resources->getLazy<SurfaceManager>()),
@@ -87,5 +89,9 @@ void SelectionSystem::update(float) {
         }
 
         this->_selected = this->_hovered;
+
+        this->_eventQueue->pushEvent<EventType::CustomEvent>(
+                makeCustomEventArgs(new SelectionChangedEvent(this->_selected))
+        );
     }
 }

@@ -4,6 +4,7 @@
 #include <Penrose/ECS/Entity.hpp>
 #include <Penrose/ECS/System.hpp>
 #include <Penrose/ECS/ECSManager.hpp>
+#include <Penrose/Events/EventQueue.hpp>
 #include <Penrose/Input/InputHandler.hpp>
 #include <Penrose/Rendering/SurfaceManager.hpp>
 #include <Penrose/Resources/Lazy.hpp>
@@ -27,6 +28,7 @@ public:
 
 private:
     Lazy<ECSManager> _ecsManager;
+    Lazy<EventQueue> _eventQueue;
     Lazy<InputHandler> _inputHandler;
     Lazy<Raycaster> _raycaster;
     Lazy<SurfaceManager> _surfaceManager;

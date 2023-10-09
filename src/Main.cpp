@@ -8,8 +8,10 @@
 #include <Penrose/Rendering/RenderGraphContext.hpp>
 
 #include <Penrose/Builtin/Penrose/Rendering/ForwardSceneDrawRenderOperator.hpp>
+#include <Penrose/Builtin/Debug/Rendering/DebugUIDrawRenderOperator.hpp>
 
 #include "src/DebugCameraSystem.hpp"
+#include "src/GameUISystem.hpp"
 #include "src/GridBuildingComponent.hpp"
 #include "src/GridCellComponent.hpp"
 #include "src/GridDrawableProvider.hpp"
@@ -74,6 +76,7 @@ int main() {
     engine.resources().add<SelectedComponentFactory, ComponentFactory>();
 
     engine.resources().add<DebugCameraSystem, System>();
+    engine.resources().add<GameUISystem>();
     engine.resources().add<GridGenerationSystem, System>();
     engine.resources().add<SelectionSystem, System>();
 
@@ -114,6 +117,17 @@ int main() {
                                      .setDepthStencilAttachment(1)
                                      .setOperatorInfo(RenderOperatorInfo(
                                              std::string(ForwardSceneDrawRenderOperator::NAME))))
+            )
+            .setSubgraph("ui", RenderSubgraphInfo()
+                    .addAttachment(RenderAttachmentInfo("swapchain")
+                                           .setLoadOp(RenderAttachmentLoadOp::Load)
+                                           .setStoreOp(RenderAttachmentStoreOp::Store)
+                                           .setInitialLayout(RenderAttachmentLayout::Present)
+                                           .setFinalLayout(RenderAttachmentLayout::Present))
+                    .addPass(RenderSubgraphPassInfo()
+                                     .addColorAttachmentIdx(0)
+                                     .setOperatorInfo(RenderOperatorInfo(
+                                             std::string(DebugUIDrawRenderOperator::NAME))))
             );
 
     auto renderContext = engine.resources().get<RenderGraphContext>();

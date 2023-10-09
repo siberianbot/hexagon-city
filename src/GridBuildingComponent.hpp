@@ -2,7 +2,6 @@
 #define HEXAGON_CITY_GRID_BUILDING_COMPONENT_HPP
 
 #include <cstdint>
-#include <optional>
 #include <string>
 
 #include <Penrose/ECS/Component.hpp>
@@ -18,17 +17,15 @@ public:
 
     [[nodiscard]] std::uint8_t &level() { return this->_level; }
 
-    [[nodiscard]] std::optional<Entity> &cell() { return this->_cell; }
+    [[nodiscard]] Entity &cell() { return this->_cell; }
 
     [[nodiscard]] std::string getName() const override { return name(); }
 
     [[nodiscard]] constexpr static std::string name() { return "GridBuilding"; }
 
 private:
-    std::uint32_t _column = 0;
-    std::uint32_t _row = 0;
     std::uint8_t _level = 1;
-    std::optional<Entity> _cell;
+    Entity _cell;
 };
 
 class GridBuildingComponentFactory : public Resource, public GenericComponentFactory<GridBuildingComponent> {
