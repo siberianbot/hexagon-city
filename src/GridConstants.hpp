@@ -13,7 +13,8 @@ constexpr glm::vec3 rgb(double r, double g, double b) {
     };
 }
 
-constexpr static const glm::vec3 GRID_SELECTED_COLOR = rgb(200, 50, 50);
+constexpr static const glm::vec3 GRID_HOVERED_COLOR = rgb(200, 200, 50);
+constexpr static const glm::vec3 GRID_SELECTED_COLOR = rgb(150, 150, 50);
 
 constexpr static const glm::vec3 GRID_BUILDING_COLOR = rgb(200, 200, 200);
 constexpr static const double GRID_BUILDING_PER_LEVEL_HEIGHT = 1.0;

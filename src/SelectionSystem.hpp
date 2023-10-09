@@ -33,7 +33,8 @@ private:
 
     Lazy<DebugCameraSystem> _cameraSystem; // TODO: we are not gonna always use debug camera
 
-    std::optional<Entity> _selection;
+    std::optional<Entity> _hovered;
+    std::optional<Entity> _selected;
 };
 
 #endif // HEXAGON_CITY_SELECTION_SYSTEM_HPP

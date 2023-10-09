@@ -15,6 +15,7 @@
 #include "src/GridDrawableProvider.hpp"
 #include "src/GridGenerationSystem.hpp"
 #include "src/GridPositionComponent.hpp"
+#include "src/HoveredComponent.hpp"
 #include "src/Raycaster.hpp"
 #include "src/RayCollisionVolumeComponent.hpp"
 #include "src/SelectedComponent.hpp"
@@ -69,6 +70,7 @@ int main() {
     engine.resources().add<GridCellComponentFactory, ComponentFactory>();
     engine.resources().add<GridPositionComponentFactory, ComponentFactory>();
     engine.resources().add<RayCollisionVolumeComponentFactory, ComponentFactory>();
+    engine.resources().add<HoveredComponentFactory, ComponentFactory>();
     engine.resources().add<SelectedComponentFactory, ComponentFactory>();
 
     engine.resources().add<DebugCameraSystem, System>();

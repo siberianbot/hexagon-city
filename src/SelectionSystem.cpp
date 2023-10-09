@@ -3,6 +3,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "src/GridConstants.hpp"
+#include "src/HoveredComponent.hpp"
 #include "src/SelectedComponent.hpp"
 
 SelectionSystem::SelectionSystem(ResourceSet *resources)
@@ -15,10 +16,6 @@ SelectionSystem::SelectionSystem(ResourceSet *resources)
 }
 
 void SelectionSystem::update(float) {
-
-    if (this->_inputHandler->getCurrentStateOf(InputKey::MB0) != Penrose::InputState::Pressed) {
-        return;
-    }
 
     const auto &currentCamera = this->_cameraSystem->getCurrentCamera();
 
@@ -60,15 +57,35 @@ void SelectionSystem::update(float) {
     auto position = glm::vec4(currentCamera.transform->getPos(), 1);
     auto direction = world - position;
 
-    auto newSelection = this->_raycaster->collide(position, direction);
+    auto newHovered = this->_raycaster->collide(position, direction);
 
-    if (this->_selection.has_value()) {
-        this->_ecsManager->removeComponent<SelectedComponent>(*this->_selection);
+    if (newHovered != this->_hovered) {
+
+        if (newHovered.has_value()) {
+            this->_ecsManager->addComponent<HoveredComponent>(*newHovered);
+        }
+
+        if (this->_hovered.has_value()) {
+            this->_ecsManager->removeComponent<HoveredComponent>(*this->_hovered);
+        }
+
+        this->_hovered = newHovered;
     }
 
-    if (newSelection.has_value()) {
-        this->_ecsManager->addComponent<SelectedComponent>(*newSelection);
+    if (this->_inputHandler->getCurrentStateOf(InputKey::MB0) != Penrose::InputState::Pressed) {
+        return;
     }
 
-    this->_selection = newSelection;
+    if (this->_hovered != this->_selected) {
+
+        if (this->_selected.has_value()) {
+            this->_ecsManager->removeComponent<SelectedComponent>(*this->_selected);
+        }
+
+        if (this->_hovered.has_value()) {
+            this->_ecsManager->addComponent<SelectedComponent>(*this->_hovered);
+        }
+
+        this->_selected = this->_hovered;
+    }
 }

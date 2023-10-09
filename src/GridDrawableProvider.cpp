@@ -9,6 +9,7 @@
 #include "src/GridCellComponent.hpp"
 #include "src/GridConstants.hpp"
 #include "src/GridPositionComponent.hpp"
+#include "src/HoveredComponent.hpp"
 #include "src/SelectedComponent.hpp"
 
 GridDrawableProvider::GridDrawableProvider(ResourceSet *resources)
@@ -52,7 +53,11 @@ std::vector<Drawable> GridDrawableProvider::getDrawablesFor(const Entity &entity
         drawable.color = GRID_CELL_COLORS[static_cast<std::uint32_t>((*maybeCell)->type())];
     }
 
-    if (this->_ecsManager->tryGetComponent<SelectedComponent>(entity).has_value()) {
+    if (this->_ecsManager->hasComponent<HoveredComponent>(entity)) {
+        drawable.color = GRID_HOVERED_COLOR;
+    }
+
+    if (this->_ecsManager->hasComponent<SelectedComponent>(entity)) {
         drawable.color = GRID_SELECTED_COLOR;
     }
 
