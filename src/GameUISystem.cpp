@@ -5,6 +5,7 @@
 #include "src/GridBuildingComponent.hpp"
 #include "src/GridCellComponent.hpp"
 #include "src/SelectionChangedEvent.hpp"
+#include "src/BuildingCreateRequestedEvent.hpp"
 
 GameUISystem::GameUISystem(ResourceSet *resources)
         : _ecsManager(resources->getLazy<ECSManager>()),
@@ -19,7 +20,9 @@ void GameUISystem::init() {
             "Empty Lot",
             {
                     std::make_shared<Button>("Create building", [this]() {
-                        // TODO
+                        this->_eventQueue->pushEvent<EventType::CustomEvent>(
+                                makeCustomEventArgs(new BuildingCreateRequestedEvent(*this->_selection))
+                        );
                     })
             }
     ));
@@ -62,6 +65,7 @@ void GameUISystem::init() {
                             this->_selection = (*maybeCell)->building();
                         } else {
                             this->_emptyLotWindow->setVisible(true);
+                            this->_buildingWindow->setVisible(false);
 
                             return;
                         }
@@ -71,6 +75,7 @@ void GameUISystem::init() {
 
                     if (maybeBuilding.has_value()) {
                         this->_buildingWindow->setVisible(true);
+                        this->_emptyLotWindow->setVisible(false);
                     }
                 }
             });

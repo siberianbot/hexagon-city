@@ -13,6 +13,7 @@
 #include "src/DebugCameraSystem.hpp"
 #include "src/GameUISystem.hpp"
 #include "src/GridBuildingComponent.hpp"
+#include "src/GridBuildingsSystem.hpp"
 #include "src/GridCellComponent.hpp"
 #include "src/GridDrawableProvider.hpp"
 #include "src/GridGenerationSystem.hpp"
@@ -76,7 +77,8 @@ int main() {
     engine.resources().add<SelectedComponentFactory, ComponentFactory>();
 
     engine.resources().add<DebugCameraSystem, System>();
-    engine.resources().add<GameUISystem>();
+    engine.resources().add<GameUISystem, System>();
+    engine.resources().add<GridBuildingsSystem, System>();
     engine.resources().add<GridGenerationSystem, System>();
     engine.resources().add<SelectionSystem, System>();
 

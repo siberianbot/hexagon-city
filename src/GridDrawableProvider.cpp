@@ -1,12 +1,11 @@
 #include "GridDrawableProvider.hpp"
 
 #include <cmath>
+#include <vector>
 
 #include <glm/vec3.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "src/GridBuildingComponent.hpp"
-#include "src/GridCellComponent.hpp"
 #include "src/GridConstants.hpp"
 #include "src/GridPositionComponent.hpp"
 #include "src/HoveredComponent.hpp"
@@ -19,39 +18,57 @@ GridDrawableProvider::GridDrawableProvider(ResourceSet *resources)
 
 std::vector<Drawable> GridDrawableProvider::getDrawablesFor(const Entity &entity) {
 
-    auto maybeGridPosition = this->_ecsManager->tryGetComponent<GridPositionComponent>(entity);
+    auto maybeCell = this->_ecsManager->tryGetComponent<GridCellComponent>(entity);
 
-    if (!maybeGridPosition.has_value()) {
+    if (!maybeCell.has_value()) {
         return {};
+    }
+
+    auto maybeCellDrawable = this->createDrawable(entity, *maybeCell);
+
+    if (!maybeCellDrawable.has_value()) {
+        return {};
+    }
+
+    if ((*maybeCell)->building().has_value()) {
+
+        auto building = *(*maybeCell)->building();
+        auto maybeBuildingDrawable = this->createDrawable(building,
+                                                          this->_ecsManager->getComponent<GridBuildingComponent>(
+                                                                  building));
+
+        if (maybeBuildingDrawable.has_value()) {
+            return {
+                    *maybeCellDrawable,
+                    *maybeBuildingDrawable
+            };
+        }
+    }
+
+    return {
+            *maybeCellDrawable
+    };
+}
+
+std::optional<Drawable> GridDrawableProvider::createDrawable(Entity entity,
+                                                             const std::shared_ptr<GridBuildingComponent> &gridBuilding) {
+
+    auto maybePosition = this->_ecsManager->tryGetComponent<GridPositionComponent>(entity);
+
+    if (!maybePosition.has_value()) {
+        return std::nullopt;
     }
 
     auto drawable = Drawable{
             .entity = entity,
             .meshAsset = "models/building.asset",
             .albedoTextureAsset = "textures/building.asset",
-            .model = glm::mat4(1),
+            .model = GridDrawableProvider::getModel((*maybePosition)->row(),
+                                                    (*maybePosition)->column(),
+                                                    0.75, gridBuilding->level() * GRID_BUILDING_PER_LEVEL_HEIGHT),
             .modelRot = glm::mat4(1),
-            .color = glm::vec3(1)
+            .color = GRID_BUILDING_COLOR
     };
-
-    auto maybeBuilding = this->_ecsManager->tryGetComponent<GridBuildingComponent>(entity);
-    auto maybeCell = this->_ecsManager->tryGetComponent<GridCellComponent>(entity);
-
-    if (maybeBuilding.has_value()) {
-        drawable.model = GridDrawableProvider::getModel((*maybeGridPosition)->row(),
-                                                        (*maybeGridPosition)->column(),
-                                                        (*maybeBuilding)->level() * GRID_BUILDING_PER_LEVEL_HEIGHT);
-
-        drawable.color = GRID_BUILDING_COLOR;
-    }
-
-    if (maybeCell.has_value()) {
-        drawable.model = GridDrawableProvider::getModel((*maybeGridPosition)->row(),
-                                                        (*maybeGridPosition)->column(),
-                                                        GRID_CELL_HEIGHT);
-
-        drawable.color = GRID_CELL_COLORS[static_cast<std::uint32_t>((*maybeCell)->type())];
-    }
 
     if (this->_ecsManager->hasComponent<HoveredComponent>(entity)) {
         drawable.color = GRID_HOVERED_COLOR;
@@ -61,14 +78,45 @@ std::vector<Drawable> GridDrawableProvider::getDrawablesFor(const Entity &entity
         drawable.color = GRID_SELECTED_COLOR;
     }
 
-    return {drawable};
+    return drawable;
 }
 
-glm::mat4 GridDrawableProvider::getModel(std::int32_t row, std::int32_t column, float height) {
+std::optional<Drawable> GridDrawableProvider::createDrawable(Entity entity,
+                                                             const std::shared_ptr<GridCellComponent> &gridCell) {
+
+    auto maybePosition = this->_ecsManager->tryGetComponent<GridPositionComponent>(entity);
+
+    if (!maybePosition.has_value()) {
+        return std::nullopt;
+    }
+
+    auto drawable = Drawable{
+            .entity = entity,
+            .meshAsset = "models/building.asset",
+            .albedoTextureAsset = "textures/building.asset",
+            .model = GridDrawableProvider::getModel((*maybePosition)->row(),
+                                                    (*maybePosition)->column(),
+                                                    1, GRID_CELL_HEIGHT),
+            .modelRot = glm::mat4(1),
+            .color = GRID_CELL_COLORS[static_cast<std::uint32_t>(gridCell->type())]
+    };
+
+    if (this->_ecsManager->hasComponent<HoveredComponent>(entity)) {
+        drawable.color = GRID_HOVERED_COLOR;
+    }
+
+    if (this->_ecsManager->hasComponent<SelectedComponent>(entity)) {
+        drawable.color = GRID_SELECTED_COLOR;
+    }
+
+    return drawable;
+}
+
+glm::mat4 GridDrawableProvider::getModel(std::int32_t row, std::int32_t column, float width, float height) {
     auto pos = GRID_CELL_DIAMETER * glm::vec3(sqrt(3) * column + sqrt(3) / 2 * row,
                                               0,
                                               3. / 2 * row);
-    auto scale = glm::vec3(1, height, 1);
+    auto scale = glm::vec3(width, height, width);
 
     return glm::translate(glm::mat4(1), pos) * glm::scale(glm::mat4(1), scale);
 }

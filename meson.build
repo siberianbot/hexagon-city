@@ -14,6 +14,7 @@ deps = [
 src = [
     'src/DebugCameraSystem.cpp',
     'src/GameUISystem.cpp',
+    'src/GridBuildingsSystem.cpp',
     'src/GridDrawableProvider.cpp',
     'src/GridGenerationSystem.cpp',
     'src/Raycaster.cpp',

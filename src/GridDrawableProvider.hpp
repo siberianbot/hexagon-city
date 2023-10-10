@@ -2,6 +2,7 @@
 #define HEXAGON_CITY_GRID_DRAWABLE_PROVIDER_HPP
 
 #include <cstdint>
+#include <memory>
 
 #include <glm/mat4x4.hpp>
 
@@ -10,6 +11,9 @@
 #include <Penrose/Resources/Lazy.hpp>
 #include <Penrose/Resources/Resource.hpp>
 #include <Penrose/Resources/ResourceSet.hpp>
+
+#include "src/GridBuildingComponent.hpp"
+#include "src/GridCellComponent.hpp"
 
 using namespace Penrose;
 
@@ -23,7 +27,12 @@ public:
 private:
     Lazy<ECSManager> _ecsManager;
 
-    [[nodiscard]] static glm::mat4 getModel(std::int32_t row, std::int32_t column, float height) ;
+    [[nodiscard]] std::optional<Drawable> createDrawable(Entity entity,
+                                                         const std::shared_ptr<GridBuildingComponent> &gridBuilding);
+    [[nodiscard]] std::optional<Drawable> createDrawable(Entity entity,
+                                                         const std::shared_ptr<GridCellComponent> &gridCell);
+
+    [[nodiscard]] static glm::mat4 getModel(std::int32_t row, std::int32_t column, float width, float height);
 };
 
 #endif // HEXAGON_CITY_GRID_DRAWABLE_PROVIDER_HPP
