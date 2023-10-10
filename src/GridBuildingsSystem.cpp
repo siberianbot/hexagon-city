@@ -2,7 +2,9 @@
 
 #include "src/GridBuildingComponent.hpp"
 #include "src/GridCellComponent.hpp"
+#include "src/GridConstants.hpp"
 #include "src/GridPositionComponent.hpp"
+#include "src/RayCollisionVolumeComponent.hpp"
 
 GridBuildingsSystem::GridBuildingsSystem(ResourceSet *resources)
         : _ecsManager(resources->getLazy<ECSManager>()),
@@ -18,6 +20,18 @@ void GridBuildingsSystem::init() {
                             std::dynamic_pointer_cast<BuildingCreateRequestedEvent>(event->getArgs().data)
                     );
                 }
+
+                if (event->getArgs().type == BuildingDestroyRequestedEvent::name()) {
+                    this->handleBuildingDestroyRequested(
+                            std::dynamic_pointer_cast<BuildingDestroyRequestedEvent>(event->getArgs().data)
+                    );
+                }
+
+                if (event->getArgs().type == BuildingUpgradeRequestedEvent::name()) {
+                    this->handleBuildingUpgradeRequested(
+                            std::dynamic_pointer_cast<BuildingUpgradeRequestedEvent>(event->getArgs().data)
+                    );
+                }
             });
 }
 
@@ -26,7 +40,7 @@ void GridBuildingsSystem::destroy() {
 }
 
 void GridBuildingsSystem::update(float) {
-    // TODO
+    // TODO?
 }
 
 void GridBuildingsSystem::handleBuildingCreateRequested(const std::shared_ptr<BuildingCreateRequestedEvent> &event) {
@@ -56,5 +70,30 @@ void GridBuildingsSystem::handleBuildingCreateRequested(const std::shared_ptr<Bu
     building->level() = 1;
     building->cell() = event->getCellEntity();
 
+    this->_ecsManager->addComponent<RayCollisionVolumeComponent>(buildingEntity);
+
     cell->building() = buildingEntity;
+}
+
+void GridBuildingsSystem::handleBuildingDestroyRequested(const std::shared_ptr<BuildingDestroyRequestedEvent> &event) {
+
+    auto building = this->_ecsManager->getComponent<GridBuildingComponent>(event->getBuildingEntity());
+
+    this->_ecsManager->getComponent<GridCellComponent>(building->cell())->building() = std::nullopt;
+
+    auto entity = event->getBuildingEntity();
+    this->_ecsManager->destroyEntity(std::forward<decltype(entity)>(entity));
+}
+
+void GridBuildingsSystem::handleBuildingUpgradeRequested(const std::shared_ptr<BuildingUpgradeRequestedEvent> &event) {
+
+    auto building = this->_ecsManager->getComponent<GridBuildingComponent>(event->getBuildingEntity());
+
+    if (building->level() >= GRID_BUILDING_MAX_LEVEL) {
+        // TODO notify "Building already upgrade to its max level"
+
+        return;
+    }
+
+    building->level()++;
 }

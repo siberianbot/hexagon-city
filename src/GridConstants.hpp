@@ -19,6 +19,8 @@ constexpr static const glm::vec3 GRID_SELECTED_COLOR = rgb(150, 150, 50);
 constexpr static const glm::vec3 GRID_BUILDING_COLOR = rgb(200, 200, 200);
 constexpr static const double GRID_BUILDING_PER_LEVEL_HEIGHT = 1.0;
 
+constexpr static const int GRID_BUILDING_MAX_LEVEL = 3;
+
 constexpr static const std::array<glm::vec3, 4> GRID_CELL_COLORS = {
         rgb(224, 224, 224), // concrete
         rgb(33, 207, 97),   // grass

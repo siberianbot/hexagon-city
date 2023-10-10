@@ -10,6 +10,8 @@
 #include <Penrose/Resources/ResourceSet.hpp>
 
 #include "src/BuildingCreateRequestedEvent.hpp"
+#include "src/BuildingDestroyRequestedEvent.hpp"
+#include "src/BuildingUpgradeRequestedEvent.hpp"
 
 using namespace Penrose;
 
@@ -32,6 +34,8 @@ private:
     EventQueue::HandlerIdx _eventHandlerIdx = -1;
 
     void handleBuildingCreateRequested(const std::shared_ptr<BuildingCreateRequestedEvent> &event);
+    void handleBuildingDestroyRequested(const std::shared_ptr<BuildingDestroyRequestedEvent> &event);
+    void handleBuildingUpgradeRequested(const std::shared_ptr<BuildingUpgradeRequestedEvent> &event);
 };
 
 #endif // HEXAGON_CITY_GRID_BUILDINGS_SYSTEM_HPP

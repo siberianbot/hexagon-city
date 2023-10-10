@@ -2,10 +2,12 @@
 
 #include <Penrose/Events/CustomEvent.hpp>
 
+#include "src/BuildingCreateRequestedEvent.hpp"
+#include "src/BuildingDestroyRequestedEvent.hpp"
+#include "src/BuildingUpgradeRequestedEvent.hpp"
 #include "src/GridBuildingComponent.hpp"
 #include "src/GridCellComponent.hpp"
 #include "src/SelectionChangedEvent.hpp"
-#include "src/BuildingCreateRequestedEvent.hpp"
 
 GameUISystem::GameUISystem(ResourceSet *resources)
         : _ecsManager(resources->getLazy<ECSManager>()),
@@ -32,10 +34,14 @@ void GameUISystem::init() {
             "Building",
             {
                     std::make_shared<Button>("Upgrade building", [this]() {
-                        // TODO
+                        this->_eventQueue->pushEvent<EventType::CustomEvent>(
+                                makeCustomEventArgs(new BuildingUpgradeRequestedEvent(*this->_selection))
+                        );
                     }),
                     std::make_shared<Button>("Destroy building", [this]() {
-                        // TODO
+                        this->_eventQueue->pushEvent<EventType::CustomEvent>(
+                                makeCustomEventArgs(new BuildingDestroyRequestedEvent(*this->_selection))
+                        );
                     })
             }
     ));
