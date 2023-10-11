@@ -12,6 +12,7 @@
 #include "src/BuildingCreateRequestedEvent.hpp"
 #include "src/BuildingDestroyRequestedEvent.hpp"
 #include "src/BuildingUpgradeRequestedEvent.hpp"
+#include "src/PlayerStateContext.hpp"
 
 using namespace Penrose;
 
@@ -30,6 +31,7 @@ public:
 private:
     Lazy<ECSManager> _ecsManager;
     Lazy<EventQueue> _eventQueue;
+    Lazy<PlayerStateContext> _playerStateContext;
 
     EventQueue::HandlerIdx _eventHandlerIdx = -1;
 

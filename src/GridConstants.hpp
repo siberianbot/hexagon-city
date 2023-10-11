@@ -25,6 +25,8 @@ constexpr static const std::array<glm::vec3, 3> GRID_BUILDING_COLORS = {
 constexpr static const double GRID_BUILDING_PER_LEVEL_HEIGHT = 1.0;
 
 constexpr static const std::uint8_t GRID_BUILDING_MAX_LEVEL = 3;
+constexpr static const std::uint32_t GRID_BUILDING_COST = 500;
+constexpr static const std::uint32_t GRID_BUILDING_UPGRADE_COST = 250;
 
 constexpr static const std::array<glm::vec3, 4> GRID_CELL_COLORS = {
         rgb(224, 224, 224), // concrete

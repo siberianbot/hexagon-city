@@ -8,7 +8,8 @@
 
 GridBuildingsSystem::GridBuildingsSystem(ResourceSet *resources)
         : _ecsManager(resources->getLazy<ECSManager>()),
-          _eventQueue(resources->getLazy<EventQueue>()) {
+          _eventQueue(resources->getLazy<EventQueue>()),
+          _playerStateContext(resources->getLazy<PlayerStateContext>()) {
     //
 }
 
@@ -60,6 +61,12 @@ void GridBuildingsSystem::handleBuildingCreateRequested(const std::shared_ptr<Bu
         return;
     }
 
+    if (this->_playerStateContext->balance() < GRID_BUILDING_COST) {
+        // TODO notify "Not enough money"
+
+        return;
+    }
+
     auto buildingEntity = this->_ecsManager->createEntity();
 
     auto buildingPosition = this->_ecsManager->addComponent<GridPositionComponent>(buildingEntity);
@@ -74,6 +81,8 @@ void GridBuildingsSystem::handleBuildingCreateRequested(const std::shared_ptr<Bu
     this->_ecsManager->addComponent<RayCollisionVolumeComponent>(buildingEntity);
 
     cell->building() = buildingEntity;
+
+    this->_playerStateContext->balance() -= GRID_BUILDING_COST;
 }
 
 void GridBuildingsSystem::handleBuildingDestroyRequested(const std::shared_ptr<BuildingDestroyRequestedEvent> &event) {
@@ -96,5 +105,13 @@ void GridBuildingsSystem::handleBuildingUpgradeRequested(const std::shared_ptr<B
         return;
     }
 
+    if (this->_playerStateContext->balance() < GRID_BUILDING_UPGRADE_COST) {
+        // TODO notify "Not enough money"
+
+        return;
+    }
+
     building->level()++;
+
+    this->_playerStateContext->balance() -= GRID_BUILDING_UPGRADE_COST;
 }

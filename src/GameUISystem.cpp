@@ -1,5 +1,7 @@
 #include "GameUISystem.hpp"
 
+#include <fmt/core.h>
+
 #include <Penrose/Events/CustomEvent.hpp>
 
 #include "src/BuildingCreateRequestedEvent.hpp"
@@ -12,7 +14,8 @@
 GameUISystem::GameUISystem(ResourceSet *resources)
         : _ecsManager(resources->getLazy<ECSManager>()),
           _eventQueue(resources->getLazy<EventQueue>()),
-          _uiContext(resources->getLazy<UIContext>()) {
+          _uiContext(resources->getLazy<UIContext>()),
+          _playerStateContext(resources->getLazy<PlayerStateContext>()) {
     //
 }
 
@@ -68,7 +71,17 @@ void GameUISystem::init() {
     ));
     this->_selectionWindow->setVisible(false);
 
+    this->_playerBalanceLabel = std::make_shared<Label>("Balance: 0");
+
+    this->_playerWindow = std::shared_ptr<Window>(new Window( // NOLINT(modernize-make-shared)
+            "Player",
+            {
+                    this->_playerBalanceLabel
+            }
+    ));
+
     this->_uiContext->setRoot("Selection", this->_selectionWindow);
+    this->_uiContext->setRoot("Player", this->_playerWindow);
 
     this->_eventHandlerIdx = this->_eventQueue->addHandler<EventType::CustomEvent, CustomEventArgs>(
             [this](const CustomEvent *event) {
@@ -84,18 +97,20 @@ void GameUISystem::destroy() {
     this->_eventQueue->removeHandler(this->_eventHandlerIdx);
 
     this->_uiContext->removeRoot("Selection");
+    this->_uiContext->removeRoot("Player");
 
     this->_selectionWindow = nullptr;
+    this->_playerWindow = nullptr;
 }
 
 void GameUISystem::update(float) {
 
-    if (!this->_selection.has_value()) {
-        this->_selectionWindow->setVisible(false);
-        return;
-    }
+    this->_playerBalanceLabel->setText(fmt::format("Balance: {}", this->_playerStateContext->balance()));
 
-    this->_cellContainer->setVisible(this->_ecsManager->hasComponent<GridCellComponent>(*this->_selection));
-    this->_buildingContainer->setVisible(this->_ecsManager->hasComponent<GridBuildingComponent>(*this->_selection));
-    this->_selectionWindow->setVisible(true);
+    this->_selectionWindow->setVisible(this->_selection.has_value());
+
+    if (this->_selection.has_value()) {
+        this->_cellContainer->setVisible(this->_ecsManager->hasComponent<GridCellComponent>(*this->_selection));
+        this->_buildingContainer->setVisible(this->_ecsManager->hasComponent<GridBuildingComponent>(*this->_selection));
+    }
 }

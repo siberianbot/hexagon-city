@@ -16,6 +16,8 @@
 #include <Penrose/Builtin/Debug/UI/UIContext.hpp>
 #include <Penrose/Builtin/Debug/UI/Widgets.hpp>
 
+#include "src/PlayerStateContext.hpp"
+
 using namespace Penrose;
 
 class GameUISystem : public Resource, public Initializable, public System {
@@ -34,10 +36,14 @@ private:
     Lazy<ECSManager> _ecsManager;
     Lazy<EventQueue> _eventQueue;
     Lazy<UIContext> _uiContext;
+    Lazy<PlayerStateContext> _playerStateContext;
 
     std::shared_ptr<Container> _cellContainer;
     std::shared_ptr<Container> _buildingContainer;
     std::shared_ptr<Window> _selectionWindow;
+
+    std::shared_ptr<Label> _playerBalanceLabel;
+    std::shared_ptr<Window> _playerWindow;
 
     EventQueue::HandlerIdx _eventHandlerIdx = -1;
 

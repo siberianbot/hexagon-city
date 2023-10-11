@@ -19,6 +19,7 @@
 #include "src/GridGenerationSystem.hpp"
 #include "src/GridPositionComponent.hpp"
 #include "src/HoveredComponent.hpp"
+#include "src/PlayerStateContext.hpp"
 #include "src/Raycaster.hpp"
 #include "src/RayCollisionVolumeComponent.hpp"
 #include "src/SelectedComponent.hpp"
@@ -84,6 +85,7 @@ int main() {
 
     engine.resources().add<GridDrawableProvider, DrawableProvider>();
 
+    engine.resources().add<PlayerStateContext>();
     engine.resources().add<Raycaster>();
 
     engine.resources().get<AssetDictionary>()->addDir("data");
