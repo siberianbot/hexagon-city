@@ -16,10 +16,15 @@ constexpr glm::vec3 rgb(double r, double g, double b) {
 constexpr static const glm::vec3 GRID_HOVERED_COLOR = rgb(200, 200, 50);
 constexpr static const glm::vec3 GRID_SELECTED_COLOR = rgb(150, 150, 50);
 
-constexpr static const glm::vec3 GRID_BUILDING_COLOR = rgb(200, 200, 200);
+constexpr static const std::array<glm::vec3, 3> GRID_BUILDING_COLORS = {
+        rgb(200, 255, 200), // residential
+        rgb(255, 200, 200), // industrial
+        rgb(200, 200, 255), // commercial
+};
+
 constexpr static const double GRID_BUILDING_PER_LEVEL_HEIGHT = 1.0;
 
-constexpr static const int GRID_BUILDING_MAX_LEVEL = 3;
+constexpr static const std::uint8_t GRID_BUILDING_MAX_LEVEL = 3;
 
 constexpr static const std::array<glm::vec3, 4> GRID_CELL_COLORS = {
         rgb(224, 224, 224), // concrete

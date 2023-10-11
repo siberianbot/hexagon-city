@@ -35,8 +35,10 @@ private:
     Lazy<EventQueue> _eventQueue;
     Lazy<UIContext> _uiContext;
 
-    std::shared_ptr<Window> _emptyLotWindow;
-    std::shared_ptr<Window> _buildingWindow;
+    std::shared_ptr<Container> _cellContainer;
+    std::shared_ptr<Container> _buildingContainer;
+    std::shared_ptr<Window> _selectionWindow;
+
     EventQueue::HandlerIdx _eventHandlerIdx = -1;
 
     std::optional<Entity> _selection;

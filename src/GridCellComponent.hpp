@@ -12,7 +12,7 @@
 
 using namespace Penrose;
 
-enum class GridCellType {
+enum class GridCellType : std::uint32_t {
     Concrete,
     Grass,
     Sand,

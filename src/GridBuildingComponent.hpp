@@ -11,9 +11,17 @@
 
 using namespace Penrose;
 
+enum class GridBuildingType : std::uint32_t {
+    Residential,
+    Industrial,
+    Commercial
+};
+
 class GridBuildingComponent : public Component {
 public:
     ~GridBuildingComponent() override = default;
+
+    [[nodiscard]] GridBuildingType &type() { return this->_type; }
 
     [[nodiscard]] std::uint8_t &level() { return this->_level; }
 
@@ -24,7 +32,8 @@ public:
     [[nodiscard]] constexpr static std::string name() { return "GridBuilding"; }
 
 private:
-    std::uint8_t _level = 1;
+    GridBuildingType _type;
+    std::uint8_t _level;
     Entity _cell;
 };
 

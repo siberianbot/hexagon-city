@@ -67,7 +67,7 @@ std::optional<Drawable> GridDrawableProvider::createDrawable(Entity entity,
                                                     (*maybePosition)->column(),
                                                     0.75, gridBuilding->level() * GRID_BUILDING_PER_LEVEL_HEIGHT),
             .modelRot = glm::mat4(1),
-            .color = GRID_BUILDING_COLOR
+            .color = GRID_BUILDING_COLORS[static_cast<std::uint32_t>(gridBuilding->type())]
     };
 
     if (this->_ecsManager->hasComponent<HoveredComponent>(entity)) {

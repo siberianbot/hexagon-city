@@ -68,6 +68,7 @@ void GridBuildingsSystem::handleBuildingCreateRequested(const std::shared_ptr<Bu
 
     auto building = this->_ecsManager->addComponent<GridBuildingComponent>(buildingEntity);
     building->level() = 1;
+    building->type() = event->getBuildingType();
     building->cell() = event->getCellEntity();
 
     this->_ecsManager->addComponent<RayCollisionVolumeComponent>(buildingEntity);

@@ -18,20 +18,33 @@ GameUISystem::GameUISystem(ResourceSet *resources)
 
 void GameUISystem::init() {
 
-    this->_emptyLotWindow = std::shared_ptr<Window>(new Window( // NOLINT(modernize-make-shared)
-            "Empty Lot",
+    auto buildingTypeDropDown = std::shared_ptr<DropDown>(new DropDown( // NOLINT(modernize-make-shared)
+            "Building Type",
             {
-                    std::make_shared<Button>("Create building", [this]() {
+                    {static_cast<std::uint64_t>(GridBuildingType::Residential), "Residential"},
+                    {static_cast<std::uint64_t>(GridBuildingType::Commercial),  "Commercial"},
+                    {static_cast<std::uint64_t>(GridBuildingType::Industrial),  "Industrial"}
+            }));
+
+    this->_cellContainer = std::shared_ptr<Container>(new Container( // NOLINT(modernize-make-shared)
+            {
+                    buildingTypeDropDown,
+                    std::make_shared<Button>("Create building", [this, buildingTypeDropDown]() {
+                        if (!buildingTypeDropDown->getSelected().has_value()) {
+                            // TODO notify "Choose building type"
+
+                            return;
+                        }
+
                         this->_eventQueue->pushEvent<EventType::CustomEvent>(
-                                makeCustomEventArgs(new BuildingCreateRequestedEvent(*this->_selection))
+                                makeCustomEventArgs(new BuildingCreateRequestedEvent(
+                                        *this->_selection,
+                                        static_cast<GridBuildingType>(*buildingTypeDropDown->getSelected())))
                         );
                     })
-            }
-    ));
-    this->_emptyLotWindow->setVisible(false);
+            }));
 
-    this->_buildingWindow = std::shared_ptr<Window>(new Window( // NOLINT(modernize-make-shared)
-            "Building",
+    this->_buildingContainer = std::shared_ptr<Container>(new Container( // NOLINT(modernize-make-shared)
             {
                     std::make_shared<Button>("Upgrade building", [this]() {
                         this->_eventQueue->pushEvent<EventType::CustomEvent>(
@@ -42,13 +55,20 @@ void GameUISystem::init() {
                         this->_eventQueue->pushEvent<EventType::CustomEvent>(
                                 makeCustomEventArgs(new BuildingDestroyRequestedEvent(*this->_selection))
                         );
+                        this->_selection = std::nullopt;
                     })
+            }));
+
+    this->_selectionWindow = std::shared_ptr<Window>(new Window( // NOLINT(modernize-make-shared)
+            "Selection",
+            {
+                    this->_cellContainer,
+                    this->_buildingContainer,
             }
     ));
-    this->_buildingWindow->setVisible(false);
+    this->_selectionWindow->setVisible(false);
 
-    this->_uiContext->setRoot("EmptyLot", this->_emptyLotWindow);
-    this->_uiContext->setRoot("Building", this->_buildingWindow);
+    this->_uiContext->setRoot("Selection", this->_selectionWindow);
 
     this->_eventHandlerIdx = this->_eventQueue->addHandler<EventType::CustomEvent, CustomEventArgs>(
             [this](const CustomEvent *event) {
@@ -56,33 +76,6 @@ void GameUISystem::init() {
                     auto selectionChanged = std::dynamic_pointer_cast<SelectionChangedEvent>(event->getArgs().data);
 
                     this->_selection = selectionChanged->getNewSelection();
-
-                    if (!this->_selection.has_value()) {
-                        this->_emptyLotWindow->setVisible(false);
-                        this->_buildingWindow->setVisible(false);
-
-                        return;
-                    }
-
-                    auto maybeCell = this->_ecsManager->tryGetComponent<GridCellComponent>(*this->_selection);
-
-                    if (maybeCell.has_value()) {
-                        if ((*maybeCell)->building().has_value()) {
-                            this->_selection = (*maybeCell)->building();
-                        } else {
-                            this->_emptyLotWindow->setVisible(true);
-                            this->_buildingWindow->setVisible(false);
-
-                            return;
-                        }
-                    }
-
-                    auto maybeBuilding = this->_ecsManager->tryGetComponent<GridBuildingComponent>(*this->_selection);
-
-                    if (maybeBuilding.has_value()) {
-                        this->_buildingWindow->setVisible(true);
-                        this->_emptyLotWindow->setVisible(false);
-                    }
                 }
             });
 }
@@ -90,17 +83,19 @@ void GameUISystem::init() {
 void GameUISystem::destroy() {
     this->_eventQueue->removeHandler(this->_eventHandlerIdx);
 
-    this->_uiContext->removeRoot("EmptyLot");
-    this->_uiContext->removeRoot("Building");
+    this->_uiContext->removeRoot("Selection");
 
-    this->_emptyLotWindow = nullptr;
-    this->_buildingWindow = nullptr;
+    this->_selectionWindow = nullptr;
 }
 
 void GameUISystem::update(float) {
+
     if (!this->_selection.has_value()) {
+        this->_selectionWindow->setVisible(false);
         return;
     }
 
-    // TODO
+    this->_cellContainer->setVisible(this->_ecsManager->hasComponent<GridCellComponent>(*this->_selection));
+    this->_buildingContainer->setVisible(this->_ecsManager->hasComponent<GridBuildingComponent>(*this->_selection));
+    this->_selectionWindow->setVisible(true);
 }
