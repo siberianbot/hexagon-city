@@ -1,5 +1,8 @@
 #include "DebugCameraSystem.hpp"
 
+#define _USE_MATH_DEFINES
+#include <cmath>
+
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <Penrose/Events/InputEvent.hpp>
