@@ -1,29 +1,12 @@
 #include "DebugCameraSystem.hpp"
 
-#define _USE_MATH_DEFINES
-#include <cmath>
-
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <Penrose/Events/InputEvent.hpp>
+#include <Penrose/Math/Constants.hpp>
+#include <Penrose/Math/NumericFuncs.hpp>
 
 #include <Penrose/Builtin/Penrose/ECS/ViewComponent.hpp>
-
-// TODO: better naming required
-template<typename T>
-T anticlamp(const T &value, const T &min, const T &max) {
-    auto dist = max - min;
-
-    if (value < min) {
-        return value + dist;
-    }
-
-    if (value > max) {
-        return value - dist;
-    }
-
-    return value;
-}
 
 DebugCameraSystem::DebugCameraSystem(ResourceSet *resources)
         : _ecsManager(resources->getLazy<ECSManager>()),
@@ -98,8 +81,8 @@ void DebugCameraSystem::init() {
                         auto [phi, theta] = this->_currentCamera->rotation;
 
                         this->_currentCamera->rotation = {
-                                anticlamp(phi - dx, 0.0f, 2 * static_cast<float>(M_PI)),
-                                std::clamp(theta + dy, -static_cast<float>(M_PI_2), static_cast<float>(M_PI_2))
+                                cycle<float>(phi - dx, 0.0f, 2 * PI_F),
+                                std::clamp(theta + dy, -PI_2_F, PI_2_F)
                         };
 
                         break;
