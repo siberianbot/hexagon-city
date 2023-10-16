@@ -1,0 +1,4 @@
+models/building.asset:models/building.asset
+shaders/default-forward-rendering.frag.asset:shaders/default-forward-rendering.frag.asset
+shaders/default-forward-rendering.vert.asset:shaders/default-forward-rendering.vert.asset
+textures/building.asset:textures/building.asset
