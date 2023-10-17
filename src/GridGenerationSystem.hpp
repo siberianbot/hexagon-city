@@ -9,6 +9,8 @@
 #include <Penrose/Resources/ResourceSet.hpp>
 #include <Penrose/Scene/SceneManager.hpp>
 
+#include "src/HexCoordinates.hpp"
+
 using namespace Penrose;
 
 class GridGenerationSystem : public Resource, public Initializable, public System {

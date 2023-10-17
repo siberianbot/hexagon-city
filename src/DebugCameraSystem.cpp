@@ -23,15 +23,15 @@ void DebugCameraSystem::init() {
     auto entity = this->_ecsManager->createEntity();
 
     auto transform = this->_ecsManager->addComponent<TransformComponent>(entity);
-    transform->getPos() = glm::vec3(-1, 6, -1);
-    transform->getRot() = glm::vec3(0, glm::radians(-30.0f), glm::radians(-45.0f));
+    transform->getPos() = glm::vec3(0, 6, 0);
+    transform->getRot() = glm::vec3(0, 0, glm::radians(-90.0f));
 
     auto perspective = this->_ecsManager->addComponent<PerspectiveCameraComponent>(entity);
     this->_ecsManager->addComponent<ViewComponent>(entity);
 
     this->_currentCamera = Camera{
             .entity = entity,
-            .rotation = {glm::radians(45.0f), glm::radians(-45.0f)},
+            .rotation = {glm::radians(0.0f), glm::radians(-90.0f)},
             .perspective = perspective,
             .transform = transform,
             .state = CameraState::Unfocused

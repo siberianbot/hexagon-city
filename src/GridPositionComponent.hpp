@@ -7,23 +7,28 @@
 #include <Penrose/ECS/ComponentFactory.hpp>
 #include <Penrose/Resources/Resource.hpp>
 
+#include "src/HexCoordinates.hpp"
+
 using namespace Penrose;
 
 class GridPositionComponent : public Component {
 public:
     ~GridPositionComponent() override = default;
 
-    [[nodiscard]] std::int32_t &row() { return this->_row; }
+    [[nodiscard]] std::int32_t &row() { return std::get<0>(this->_coord); }
 
-    [[nodiscard]] std::int32_t &column() { return this->_column; }
+    [[nodiscard]] std::int32_t &column() { return std::get<1>(this->_coord); }
+
+    void fromCubeCoordinates(const CubeCoord &cube) {
+        this->_coord = convert<CubeCoord, AxialCoord>(cube);
+    }
 
     [[nodiscard]] std::string getName() const override { return name(); }
 
     [[nodiscard]] constexpr static std::string name() { return "GridPosition"; }
 
 private:
-    std::int32_t _row;
-    std::int32_t _column;
+    AxialCoord _coord;
 };
 
 class GridPositionComponentFactory : public Resource, public GenericComponentFactory<GridPositionComponent> {
