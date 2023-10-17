@@ -1,5 +1,8 @@
 #include "GridBuildingsSystem.hpp"
 
+#include "src/BuildingCreatedEvent.hpp"
+#include "src/BuildingDestroyedEvent.hpp"
+#include "src/BuildingUpgradedEvent.hpp"
 #include "src/GridBuildingComponent.hpp"
 #include "src/GridCellComponent.hpp"
 #include "src/GridConstants.hpp"
@@ -83,6 +86,10 @@ void GridBuildingsSystem::handleBuildingCreateRequested(const std::shared_ptr<Bu
     cell->building() = buildingEntity;
 
     this->_playerStateContext->balance() -= GRID_BUILDING_COST;
+
+    this->_eventQueue->pushEvent<EventType::CustomEvent>(
+            makeCustomEventArgs(new BuildingCreatedEvent(buildingEntity, building->type()))
+    );
 }
 
 void GridBuildingsSystem::handleBuildingDestroyRequested(const std::shared_ptr<BuildingDestroyRequestedEvent> &event) {
@@ -93,6 +100,10 @@ void GridBuildingsSystem::handleBuildingDestroyRequested(const std::shared_ptr<B
 
     auto entity = event->getBuildingEntity();
     this->_ecsManager->destroyEntity(std::forward<decltype(entity)>(entity));
+
+    this->_eventQueue->pushEvent<EventType::CustomEvent>(
+            makeCustomEventArgs(new BuildingDestroyedEvent(event->getBuildingEntity(), building->type()))
+    );
 }
 
 void GridBuildingsSystem::handleBuildingUpgradeRequested(const std::shared_ptr<BuildingUpgradeRequestedEvent> &event) {
@@ -114,4 +125,10 @@ void GridBuildingsSystem::handleBuildingUpgradeRequested(const std::shared_ptr<B
     building->level()++;
 
     this->_playerStateContext->balance() -= GRID_BUILDING_UPGRADE_COST;
+
+    this->_eventQueue->pushEvent<EventType::CustomEvent>(
+            makeCustomEventArgs(new BuildingUpgradedEvent(event->getBuildingEntity(),
+                                                          building->type(),
+                                                          building->level()))
+    );
 }
