@@ -10,6 +10,7 @@
 #include <Penrose/Builtin/Penrose/Rendering/ForwardSceneDrawRenderOperator.hpp>
 #include <Penrose/Builtin/Debug/Rendering/DebugUIDrawRenderOperator.hpp>
 
+#include "src/CitySimulationSystem.hpp"
 #include "src/DebugCameraSystem.hpp"
 #include "src/GameUISystem.hpp"
 #include "src/GridBuildingComponent.hpp"
@@ -20,6 +21,7 @@
 #include "src/GridPositionComponent.hpp"
 #include "src/HoveredComponent.hpp"
 #include "src/PlayerStateContext.hpp"
+#include "src/RandomGenerator.hpp"
 #include "src/Raycaster.hpp"
 #include "src/RayCollisionVolumeComponent.hpp"
 #include "src/SelectedComponent.hpp"
@@ -77,6 +79,7 @@ int main() {
     engine.resources().add<HoveredComponentFactory, ComponentFactory>();
     engine.resources().add<SelectedComponentFactory, ComponentFactory>();
 
+    engine.resources().add<CitySimulationSystem, System>();
     engine.resources().add<DebugCameraSystem, System>();
     engine.resources().add<GameUISystem, System>();
     engine.resources().add<GridBuildingsSystem, System>();
@@ -86,6 +89,7 @@ int main() {
     engine.resources().add<GridDrawableProvider, DrawableProvider>();
 
     engine.resources().add<PlayerStateContext>();
+    engine.resources().add<RandomGenerator>();
     engine.resources().add<Raycaster>();
 
     engine.resources().get<AssetDictionary>()->addDir("data");

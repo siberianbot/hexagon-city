@@ -10,6 +10,7 @@
 #include <Penrose/Scene/SceneManager.hpp>
 
 #include "src/HexCoordinates.hpp"
+#include "src/RandomGenerator.hpp"
 
 using namespace Penrose;
 
@@ -28,6 +29,7 @@ public:
 
 private:
     Lazy<ECSManager> _ecsManager;
+    Lazy<RandomGenerator> _randomGenerator;
     Lazy<SceneManager> _sceneManager;
 };
 

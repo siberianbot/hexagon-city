@@ -1,7 +1,5 @@
 #include "GridGenerationSystem.hpp"
 
-#include <random>
-
 #include "src/GridCellComponent.hpp"
 #include "src/GridPositionComponent.hpp"
 #include "src/RayCollisionVolumeComponent.hpp"
@@ -11,6 +9,7 @@ constexpr static const CubeCoord GRID_CENTER = {0, 0, 0};
 
 GridGenerationSystem::GridGenerationSystem(ResourceSet *resources)
         : _ecsManager(resources->getLazy<ECSManager>()),
+          _randomGenerator(resources->getLazy<RandomGenerator>()),
           _sceneManager(resources->getLazy<SceneManager>()) {
     //
 }
@@ -18,12 +17,8 @@ GridGenerationSystem::GridGenerationSystem(ResourceSet *resources)
 void GridGenerationSystem::init() {
     auto root = this->_sceneManager->getOrAddRoot("City");
 
-    auto randomDevice = std::random_device();
-    auto randomEngine = std::default_random_engine(randomDevice());
-    auto distribution = std::uniform_int_distribution(0, 3);
-
     auto pushCell = [&](const CubeCoord &cube) {
-        auto type = distribution(randomEngine);
+        auto type = this->_randomGenerator->generateInt(0, 3);
         auto entity = this->_ecsManager->createEntity();
 
         auto position = this->_ecsManager->addComponent<GridPositionComponent>(entity);

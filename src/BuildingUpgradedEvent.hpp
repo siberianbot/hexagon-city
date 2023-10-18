@@ -28,7 +28,7 @@ public:
 
     [[nodiscard]] const std::uint8_t &getNewLevel() const { return this->_newLevel; }
 
-    [[nodiscard]] static std::string name() { return "BuildingCreated"; }
+    [[nodiscard]] static std::string name() { return "BuildingUpgraded"; }
 
 private:
     Entity _buildingEntity;

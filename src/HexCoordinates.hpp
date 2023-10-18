@@ -5,8 +5,6 @@
 #include <cstdint>
 #include <tuple>
 
-#include <Penrose/Common/EngineError.hpp>
-
 using namespace Penrose;
 
 using AxialCoord = std::tuple<std::int32_t, std::int32_t>; // q, r
@@ -14,6 +12,29 @@ using CubeCoord = std::tuple<std::int32_t, std::int32_t, std::int32_t>; // q, r,
 
 template<typename T>
 concept HexCoord = std::is_same_v<T, AxialCoord> || std::is_same_v<T, CubeCoord>;
+
+constexpr static const std::array<AxialCoord, 6> AXIAL_DIRECTIONS = {
+        std::make_tuple(1, 0),
+        std::make_tuple(1, -1),
+        std::make_tuple(0, -1),
+        std::make_tuple(-1, 0),
+        std::make_tuple(-1, +1),
+        std::make_tuple(0, +1),
+};
+
+constexpr AxialCoord axialAdd(const AxialCoord &hex, const AxialCoord &dir) {
+    const auto &[hex_q, hex_r] = hex;
+    const auto &[dir_q, dir_r] = dir;
+
+    return {
+            hex_q + dir_q,
+            hex_r + dir_r
+    };
+}
+
+constexpr AxialCoord axialNeighbor(const AxialCoord &hex, std::uint32_t dir) {
+    return axialAdd(hex, AXIAL_DIRECTIONS.at(dir));
+}
 
 constexpr static const std::array<CubeCoord, 6> CUBE_DIRECTIONS = {
         std::make_tuple(1, 0, -1),

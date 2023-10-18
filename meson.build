@@ -12,11 +12,13 @@ deps = [
 ]
 
 src = [
+    'src/CitySimulationSystem.cpp',
     'src/DebugCameraSystem.cpp',
     'src/GameUISystem.cpp',
     'src/GridBuildingsSystem.cpp',
     'src/GridDrawableProvider.cpp',
     'src/GridGenerationSystem.cpp',
+    'src/RandomGenerator.cpp',
     'src/Raycaster.cpp',
     'src/SelectionSystem.cpp',
     'src/Main.cpp',

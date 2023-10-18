@@ -1,5 +1,9 @@
 #include "GridBuildingsSystem.hpp"
 
+#include <stdexcept>
+
+#include <Penrose/Utils/OptionalUtils.hpp>
+
 #include "src/BuildingCreatedEvent.hpp"
 #include "src/BuildingDestroyedEvent.hpp"
 #include "src/BuildingUpgradedEvent.hpp"
@@ -37,14 +41,33 @@ void GridBuildingsSystem::init() {
                     );
                 }
             });
+
+    this->_entitiesBuildings.clear();
+    this->_entitiesPositions.clear();
 }
 
 void GridBuildingsSystem::destroy() {
     this->_eventQueue->removeHandler(this->_eventHandlerIdx);
 }
 
-void GridBuildingsSystem::update(float) {
-    // TODO?
+std::vector<Entity> GridBuildingsSystem::getAllNearest(const Entity &center, GridBuildingType type) {
+    auto data = orElseThrow(
+            tryGetPointer(this->_entitiesBuildings, center),
+            std::logic_error("No such building entity")
+    );
+
+    std::vector<Entity> entities;
+
+    for (std::uint32_t dir = 0; dir < AXIAL_DIRECTIONS.size(); dir++) {
+        auto positionType = std::make_tuple(axialNeighbor(data->position->coord(), dir), type);
+        auto maybeEntity = tryGet(this->_entitiesPositions, positionType);
+
+        if (maybeEntity.has_value()) {
+            entities.emplace_back(*maybeEntity);
+        }
+    }
+
+    return entities;
 }
 
 void GridBuildingsSystem::handleBuildingCreateRequested(const std::shared_ptr<BuildingCreateRequestedEvent> &event) {
@@ -73,8 +96,7 @@ void GridBuildingsSystem::handleBuildingCreateRequested(const std::shared_ptr<Bu
     auto buildingEntity = this->_ecsManager->createEntity();
 
     auto buildingPosition = this->_ecsManager->addComponent<GridPositionComponent>(buildingEntity);
-    buildingPosition->row() = cellPosition->row();
-    buildingPosition->column() = cellPosition->column();
+    buildingPosition->coord() = cellPosition->coord();
 
     auto building = this->_ecsManager->addComponent<GridBuildingComponent>(buildingEntity);
     building->level() = 1;
@@ -87,6 +109,12 @@ void GridBuildingsSystem::handleBuildingCreateRequested(const std::shared_ptr<Bu
 
     this->_playerStateContext->balance() -= GRID_BUILDING_COST;
 
+    this->_entitiesPositions.emplace(std::make_tuple(buildingPosition->coord(), building->type()), buildingEntity);
+    this->_entitiesBuildings.emplace(buildingEntity, BuildingData{
+            .building = building,
+            .position = buildingPosition
+    });
+
     this->_eventQueue->pushEvent<EventType::CustomEvent>(
             makeCustomEventArgs(new BuildingCreatedEvent(buildingEntity, building->type()))
     );
@@ -97,6 +125,10 @@ void GridBuildingsSystem::handleBuildingDestroyRequested(const std::shared_ptr<B
     auto building = this->_ecsManager->getComponent<GridBuildingComponent>(event->getBuildingEntity());
 
     this->_ecsManager->getComponent<GridCellComponent>(building->cell())->building() = std::nullopt;
+
+    auto coord = this->_ecsManager->getComponent<GridPositionComponent>(event->getBuildingEntity())->coord();
+    this->_entitiesPositions.erase(std::make_tuple(coord, building->type()));
+    this->_entitiesBuildings.erase(event->getBuildingEntity());
 
     auto entity = event->getBuildingEntity();
     this->_ecsManager->destroyEntity(std::forward<decltype(entity)>(entity));

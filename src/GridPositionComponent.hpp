@@ -19,6 +19,8 @@ public:
 
     [[nodiscard]] std::int32_t &column() { return std::get<1>(this->_coord); }
 
+    [[nodiscard]] AxialCoord &coord() { return this->_coord; }
+
     void fromCubeCoordinates(const CubeCoord &cube) {
         this->_coord = convert<CubeCoord, AxialCoord>(cube);
     }
