@@ -232,6 +232,7 @@ void CitySimulationSystem::updateResidentials(float delta) {
         }
 
         for (const auto &it: toRemoval) {
+            residentialData.count -= it->count;
             residentialData.residents.erase(it);
         }
     }
