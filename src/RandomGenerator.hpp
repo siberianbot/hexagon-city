@@ -9,7 +9,7 @@
 
 using namespace Penrose;
 
-class RandomGenerator : public Resource {
+class RandomGenerator : public Resource<RandomGenerator> {
 public:
     ~RandomGenerator() override = default;
 

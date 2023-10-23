@@ -8,12 +8,12 @@
 #include "src/SelectionChangedEvent.hpp"
 
 SelectionSystem::SelectionSystem(ResourceSet *resources)
-        : _ecsManager(resources->getLazy<ECSManager>()),
-          _eventQueue(resources->getLazy<EventQueue>()),
-          _inputHandler(resources->getLazy<InputHandler>()),
-          _raycaster(resources->getLazy<Raycaster>()),
-          _surfaceManager(resources->getLazy<SurfaceManager>()),
-          _cameraSystem(resources->getLazy<DebugCameraSystem>()) {
+        : _ecsManager(resources->get<ECSManager>()),
+          _eventQueue(resources->get<EventQueue>()),
+          _inputHandler(resources->get<InputHandler>()),
+          _raycaster(resources->get<Raycaster>()),
+          _surfaceManager(resources->get<SurfaceManager>()),
+          _cameraSystem(resources->get<DebugCameraSystem>()) {
     //
 }
 

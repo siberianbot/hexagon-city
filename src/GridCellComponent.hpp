@@ -36,7 +36,8 @@ private:
     std::optional<Entity> _building;
 };
 
-class GridCellComponentFactory : public Resource, public GenericComponentFactory<GridCellComponent> {
+class GridCellComponentFactory : public Resource<GridCellComponentFactory>,
+                                 public GenericComponentFactory<GridCellComponent> {
     //
 };
 

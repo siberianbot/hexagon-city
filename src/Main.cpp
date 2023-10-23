@@ -72,25 +72,44 @@ int main() {
 
     Engine engine;
 
-    engine.resources().add<GridBuildingComponentFactory, ComponentFactory>();
-    engine.resources().add<GridCellComponentFactory, ComponentFactory>();
-    engine.resources().add<GridPositionComponentFactory, ComponentFactory>();
-    engine.resources().add<RayCollisionVolumeComponentFactory, ComponentFactory>();
-    engine.resources().add<HoveredComponentFactory, ComponentFactory>();
-    engine.resources().add<SelectedComponentFactory, ComponentFactory>();
+    engine.resources().add<GridBuildingComponentFactory>().implements<ComponentFactory>().done();
+    engine.resources().add<GridCellComponentFactory>().implements<ComponentFactory>().done();
+    engine.resources().add<GridPositionComponentFactory>().implements<ComponentFactory>().done();
+    engine.resources().add<RayCollisionVolumeComponentFactory>().implements<ComponentFactory>().done();
+    engine.resources().add<HoveredComponentFactory>().implements<ComponentFactory>().done();
+    engine.resources().add<SelectedComponentFactory>().implements<ComponentFactory>().done();
 
-    engine.resources().add<CitySimulationSystem, System>();
-    engine.resources().add<DebugCameraSystem, System>();
-    engine.resources().add<GameUISystem, System>();
-    engine.resources().add<GridBuildingsSystem, System>();
-    engine.resources().add<GridGenerationSystem, System>();
-    engine.resources().add<SelectionSystem, System>();
+    engine.resources().add<CitySimulationSystem>()
+            .implements<Initializable>()
+            .implements<System>()
+            .done();
+    engine.resources().add<DebugCameraSystem>()
+            .implements<Initializable>()
+            .implements<System>()
+            .done();
+    engine.resources().add<GameUISystem>()
+            .implements<Initializable>()
+            .implements<System>()
+            .done();
+    engine.resources().add<GridBuildingsSystem>()
+            .implements<Initializable>()
+            .implements<System>()
+            .done();
+    engine.resources().add<GridGenerationSystem>()
+            .implements<Initializable>()
+            .implements<System>()
+            .done();
+    engine.resources().add<SelectionSystem>()
+            .implements<System>()
+            .done();
 
-    engine.resources().add<GridDrawableProvider, DrawableProvider>();
+    engine.resources().add<GridDrawableProvider>()
+            .implements<DrawableProvider>()
+            .done();
 
-    engine.resources().add<PlayerStateContext>();
-    engine.resources().add<RandomGenerator>();
-    engine.resources().add<Raycaster>();
+    engine.resources().add<PlayerStateContext>().done();
+    engine.resources().add<RandomGenerator>().done();
+    engine.resources().add<Raycaster>().done();
 
     engine.resources().get<AssetDictionary>()->addDir("data");
 

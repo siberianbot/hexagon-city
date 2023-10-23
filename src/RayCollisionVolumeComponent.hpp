@@ -18,7 +18,7 @@ public:
     [[nodiscard]] constexpr static std::string name() { return "RayCollisionVolume"; }
 };
 
-class RayCollisionVolumeComponentFactory : public Resource,
+class RayCollisionVolumeComponentFactory : public Resource<RayCollisionVolumeComponentFactory>,
                                            public GenericComponentFactory<RayCollisionVolumeComponent> {
     //
 };

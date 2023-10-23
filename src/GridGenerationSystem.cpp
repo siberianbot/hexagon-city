@@ -8,9 +8,9 @@ constexpr static const std::int32_t GRID_RADIUS = 16;
 constexpr static const CubeCoord GRID_CENTER = {0, 0, 0};
 
 GridGenerationSystem::GridGenerationSystem(ResourceSet *resources)
-        : _ecsManager(resources->getLazy<ECSManager>()),
-          _randomGenerator(resources->getLazy<RandomGenerator>()),
-          _sceneManager(resources->getLazy<SceneManager>()) {
+        : _ecsManager(resources->get<ECSManager>()),
+          _randomGenerator(resources->get<RandomGenerator>()),
+          _sceneManager(resources->get<SceneManager>()) {
     //
 }
 

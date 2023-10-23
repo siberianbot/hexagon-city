@@ -9,8 +9,6 @@
 #include <Penrose/ECS/System.hpp>
 #include <Penrose/Events/EventQueue.hpp>
 #include <Penrose/Resources/Initializable.hpp>
-#include <Penrose/Resources/Lazy.hpp>
-#include <Penrose/Resources/Resource.hpp>
 #include <Penrose/Resources/ResourceSet.hpp>
 
 #include "src/BuildingCreatedEvent.hpp"
@@ -21,7 +19,9 @@
 
 using namespace Penrose;
 
-class CitySimulationSystem : public Resource, public Initializable, public System {
+class CitySimulationSystem : public Resource<CitySimulationSystem>,
+                             public Initializable,
+                             public System {
 public:
     struct Resident {
         std::uint32_t count;
@@ -71,9 +71,9 @@ public:
     [[nodiscard]] const std::map<Entity, CommercialData> &getCommercials() const { return this->_commercials; }
 
 private:
-    Lazy<EventQueue> _eventQueue;
-    Lazy<GridBuildingsSystem> _gridBuildingsSystem;
-    Lazy<RandomGenerator> _randomGenerator;
+    ResourceProxy<EventQueue> _eventQueue;
+    ResourceProxy<GridBuildingsSystem> _gridBuildingsSystem;
+    ResourceProxy<RandomGenerator> _randomGenerator;
 
     EventQueue::HandlerIdx _eventHandlerIdx = -1;
 

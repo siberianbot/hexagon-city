@@ -33,7 +33,8 @@ private:
     AxialCoord _coord;
 };
 
-class GridPositionComponentFactory : public Resource, public GenericComponentFactory<GridPositionComponent> {
+class GridPositionComponentFactory : public Resource<GridPositionComponentFactory>,
+                                     public GenericComponentFactory<GridPositionComponent> {
     //
 };
 

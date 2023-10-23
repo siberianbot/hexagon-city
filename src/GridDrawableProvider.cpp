@@ -12,7 +12,7 @@
 #include "src/SelectedComponent.hpp"
 
 GridDrawableProvider::GridDrawableProvider(ResourceSet *resources)
-        : _ecsManager(resources->getLazy<ECSManager>()) {
+        : _ecsManager(resources->get<ECSManager>()) {
     //
 }
 

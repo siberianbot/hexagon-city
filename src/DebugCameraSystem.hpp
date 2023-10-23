@@ -12,8 +12,6 @@
 #include <Penrose/Input/InputHandler.hpp>
 #include <Penrose/Rendering/SurfaceManager.hpp>
 #include <Penrose/Resources/Initializable.hpp>
-#include <Penrose/Resources/Lazy.hpp>
-#include <Penrose/Resources/Resource.hpp>
 #include <Penrose/Resources/ResourceSet.hpp>
 #include <Penrose/Scene/SceneManager.hpp>
 
@@ -24,7 +22,9 @@
 
 using namespace Penrose;
 
-class DebugCameraSystem : public Resource, public Initializable, public System {
+class DebugCameraSystem : public Resource<DebugCameraSystem>,
+                          public Initializable,
+                          public System {
 public:
     enum class CameraState {
         Unfocused,
@@ -52,11 +52,11 @@ public:
     [[nodiscard]] const Camera &getCurrentCamera() const { return (*this->_currentCamera); }
 
 private:
-    Lazy<ECSManager> _ecsManager;
-    Lazy<EventQueue> _eventQueue;
-    Lazy<InputHandler> _inputHandler;
-    Lazy<SceneManager> _sceneManager;
-    Lazy<SurfaceManager> _surfaceManager;
+    ResourceProxy<ECSManager> _ecsManager;
+    ResourceProxy<EventQueue> _eventQueue;
+    ResourceProxy<InputHandler> _inputHandler;
+    ResourceProxy<SceneManager> _sceneManager;
+    ResourceProxy<SurfaceManager> _surfaceManager;
 
     std::optional<Camera> _currentCamera;
     EventQueue::HandlerIdx _eventHandlerIdx = -1;

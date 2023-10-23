@@ -14,9 +14,9 @@
 #include "src/RayCollisionVolumeComponent.hpp"
 
 GridBuildingsSystem::GridBuildingsSystem(ResourceSet *resources)
-        : _ecsManager(resources->getLazy<ECSManager>()),
-          _eventQueue(resources->getLazy<EventQueue>()),
-          _playerStateContext(resources->getLazy<PlayerStateContext>()) {
+        : _ecsManager(resources->get<ECSManager>()),
+          _eventQueue(resources->get<EventQueue>()),
+          _playerStateContext(resources->get<PlayerStateContext>()) {
     //
 }
 

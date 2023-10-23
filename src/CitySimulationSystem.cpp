@@ -24,9 +24,9 @@ constexpr static const float POPULATION_HAPPINESS_TIMER = 5.0f;
 constexpr static const float POPULATION_REST_TIMER = 5.0f;
 
 CitySimulationSystem::CitySimulationSystem(ResourceSet *resources)
-        : _eventQueue(resources->getLazy<EventQueue>()),
-          _gridBuildingsSystem(resources->getLazy<GridBuildingsSystem>()),
-          _randomGenerator(resources->getLazy<RandomGenerator>()) {
+        : _eventQueue(resources->get<EventQueue>()),
+          _gridBuildingsSystem(resources->get<GridBuildingsSystem>()),
+          _randomGenerator(resources->get<RandomGenerator>()) {
     //
 }
 

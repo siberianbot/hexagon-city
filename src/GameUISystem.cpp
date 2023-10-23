@@ -10,11 +10,11 @@
 #include "src/SelectionChangedEvent.hpp"
 
 GameUISystem::GameUISystem(ResourceSet *resources)
-        : _ecsManager(resources->getLazy<ECSManager>()),
-          _eventQueue(resources->getLazy<EventQueue>()),
-          _uiContext(resources->getLazy<UIContext>()),
-          _citySimulationSystem(resources->getLazy<CitySimulationSystem>()),
-          _playerStateContext(resources->getLazy<PlayerStateContext>()) {
+        : _ecsManager(resources->get<ECSManager>()),
+          _eventQueue(resources->get<EventQueue>()),
+          _uiContext(resources->get<UIContext>()),
+          _citySimulationSystem(resources->get<CitySimulationSystem>()),
+          _playerStateContext(resources->get<PlayerStateContext>()) {
     //
 }
 

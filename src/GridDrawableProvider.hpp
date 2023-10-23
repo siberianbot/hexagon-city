@@ -8,8 +8,6 @@
 
 #include <Penrose/ECS/ECSManager.hpp>
 #include <Penrose/Rendering/DrawableProvider.hpp>
-#include <Penrose/Resources/Lazy.hpp>
-#include <Penrose/Resources/Resource.hpp>
 #include <Penrose/Resources/ResourceSet.hpp>
 
 #include "src/GridBuildingComponent.hpp"
@@ -17,7 +15,8 @@
 
 using namespace Penrose;
 
-class GridDrawableProvider : public Resource, public DrawableProvider {
+class GridDrawableProvider : public Resource<GridDrawableProvider>,
+                             public DrawableProvider {
 public:
     explicit GridDrawableProvider(ResourceSet *resources);
     ~GridDrawableProvider() override = default;
@@ -25,7 +24,7 @@ public:
     [[nodiscard]] std::vector<Drawable> getDrawablesFor(const Entity &entity) override;
 
 private:
-    Lazy<ECSManager> _ecsManager;
+    ResourceProxy<ECSManager> _ecsManager;
 
     [[nodiscard]] std::optional<Drawable> createDrawable(Entity entity,
                                                          const std::shared_ptr<GridBuildingComponent> &gridBuilding);

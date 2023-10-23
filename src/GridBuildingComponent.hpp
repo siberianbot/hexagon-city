@@ -37,7 +37,8 @@ private:
     Entity _cell;
 };
 
-class GridBuildingComponentFactory : public Resource, public GenericComponentFactory<GridBuildingComponent> {
+class GridBuildingComponentFactory : public Resource<GridBuildingComponentFactory>,
+                                     public GenericComponentFactory<GridBuildingComponent> {
     //
 };
 

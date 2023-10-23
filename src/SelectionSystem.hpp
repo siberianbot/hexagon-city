@@ -7,8 +7,6 @@
 #include <Penrose/Events/EventQueue.hpp>
 #include <Penrose/Input/InputHandler.hpp>
 #include <Penrose/Rendering/SurfaceManager.hpp>
-#include <Penrose/Resources/Lazy.hpp>
-#include <Penrose/Resources/Resource.hpp>
 #include <Penrose/Resources/ResourceSet.hpp>
 #include <Penrose/Scene/SceneManager.hpp>
 
@@ -17,7 +15,8 @@
 
 using namespace Penrose;
 
-class SelectionSystem : public Resource, public System {
+class SelectionSystem : public Resource<SelectionSystem>,
+                        public System {
 public:
     explicit SelectionSystem(ResourceSet *resources);
     ~SelectionSystem() override = default;
@@ -27,13 +26,13 @@ public:
     [[nodiscard]] std::string getName() const override { return "Selection"; }
 
 private:
-    Lazy<ECSManager> _ecsManager;
-    Lazy<EventQueue> _eventQueue;
-    Lazy<InputHandler> _inputHandler;
-    Lazy<Raycaster> _raycaster;
-    Lazy<SurfaceManager> _surfaceManager;
+    ResourceProxy<ECSManager> _ecsManager;
+    ResourceProxy<EventQueue> _eventQueue;
+    ResourceProxy<InputHandler> _inputHandler;
+    ResourceProxy<Raycaster> _raycaster;
+    ResourceProxy<SurfaceManager> _surfaceManager;
 
-    Lazy<DebugCameraSystem> _cameraSystem; // TODO: we are not gonna always use debug camera
+    ResourceProxy<DebugCameraSystem> _cameraSystem; // TODO: we are not gonna always use debug camera
 
     std::optional<Entity> _hovered;
     std::optional<Entity> _selected;

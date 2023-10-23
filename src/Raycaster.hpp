@@ -7,13 +7,11 @@
 
 #include <Penrose/ECS/ECSManager.hpp>
 #include <Penrose/ECS/Entity.hpp>
-#include <Penrose/Resources/Lazy.hpp>
-#include <Penrose/Resources/Resource.hpp>
 #include <Penrose/Resources/ResourceSet.hpp>
 
 using namespace Penrose;
 
-class Raycaster : public Resource {
+class Raycaster : public Resource<Raycaster> {
 public:
     explicit Raycaster(ResourceSet *resources);
     ~Raycaster() override = default;
@@ -22,7 +20,7 @@ public:
                                                 const glm::vec3 &direction);
 
 private:
-    Lazy<ECSManager> _ecsManager;
+    ResourceProxy<ECSManager> _ecsManager;
 };
 
 #endif // HEXAGON_CITY_RAYCASTER_HPP

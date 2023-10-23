@@ -23,7 +23,7 @@ constexpr inline T max(const T &a, const T &b, const Args &...args) {
 }
 
 Raycaster::Raycaster(ResourceSet *resources)
-        : _ecsManager(resources->getLazy<ECSManager>()) {
+        : _ecsManager(resources->get<ECSManager>()) {
     //
 }
 

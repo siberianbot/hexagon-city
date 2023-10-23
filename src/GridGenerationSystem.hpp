@@ -4,8 +4,6 @@
 #include <Penrose/ECS/System.hpp>
 #include <Penrose/ECS/ECSManager.hpp>
 #include <Penrose/Resources/Initializable.hpp>
-#include <Penrose/Resources/Lazy.hpp>
-#include <Penrose/Resources/Resource.hpp>
 #include <Penrose/Resources/ResourceSet.hpp>
 #include <Penrose/Scene/SceneManager.hpp>
 
@@ -14,7 +12,9 @@
 
 using namespace Penrose;
 
-class GridGenerationSystem : public Resource, public Initializable, public System {
+class GridGenerationSystem : public Resource<GridGenerationSystem>,
+                             public Initializable,
+                             public System {
 public:
     explicit GridGenerationSystem(ResourceSet *resources);
     ~GridGenerationSystem() override = default;
@@ -28,9 +28,9 @@ public:
     [[nodiscard]] std::string getName() const override { return "GridGeneration"; }
 
 private:
-    Lazy<ECSManager> _ecsManager;
-    Lazy<RandomGenerator> _randomGenerator;
-    Lazy<SceneManager> _sceneManager;
+    ResourceProxy<ECSManager> _ecsManager;
+    ResourceProxy<RandomGenerator> _randomGenerator;
+    ResourceProxy<SceneManager> _sceneManager;
 };
 
 #endif // HEXAGON_CITY_GRID_GENERATION_SYSTEM_HPP

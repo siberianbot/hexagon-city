@@ -16,7 +16,8 @@ public:
     [[nodiscard]] constexpr static std::string name() { return "Hovered"; }
 };
 
-class HoveredComponentFactory : public Resource, public GenericComponentFactory<HoveredComponent> {
+class HoveredComponentFactory : public Resource<HoveredComponentFactory>,
+                                public GenericComponentFactory<HoveredComponent> {
     //
 };
 

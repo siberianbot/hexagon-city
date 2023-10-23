@@ -9,11 +9,11 @@
 #include <Penrose/Builtin/Penrose/ECS/ViewComponent.hpp>
 
 DebugCameraSystem::DebugCameraSystem(ResourceSet *resources)
-        : _ecsManager(resources->getLazy<ECSManager>()),
-          _eventQueue(resources->getLazy<EventQueue>()),
-          _inputHandler(resources->getLazy<InputHandler>()),
-          _sceneManager(resources->getLazy<SceneManager>()),
-          _surfaceManager(resources->getLazy<SurfaceManager>()) {
+        : _ecsManager(resources->get<ECSManager>()),
+          _eventQueue(resources->get<EventQueue>()),
+          _inputHandler(resources->get<InputHandler>()),
+          _sceneManager(resources->get<SceneManager>()),
+          _surfaceManager(resources->get<SurfaceManager>()) {
 //
 }
 

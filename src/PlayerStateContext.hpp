@@ -5,7 +5,7 @@
 
 using namespace Penrose;
 
-class PlayerStateContext : public Resource {
+class PlayerStateContext : public Resource<PlayerStateContext> {
 public:
     ~PlayerStateContext() override = default;
 

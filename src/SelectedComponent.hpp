@@ -16,7 +16,8 @@ public:
     [[nodiscard]] constexpr static std::string name() { return "Selected"; }
 };
 
-class SelectedComponentFactory : public Resource, public GenericComponentFactory<SelectedComponent> {
+class SelectedComponentFactory : public Resource<SelectedComponentFactory>,
+                                 public GenericComponentFactory<SelectedComponent> {
     //
 };
 
