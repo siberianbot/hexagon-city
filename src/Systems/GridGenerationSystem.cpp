@@ -1,14 +1,14 @@
 #include "GridGenerationSystem.hpp"
 
-#include "src/GridCellComponent.hpp"
-#include "src/GridPositionComponent.hpp"
-#include "src/RayCollisionVolumeComponent.hpp"
+#include "src/Components/GridCellComponent.hpp"
+#include "src/Components/GridPositionComponent.hpp"
+#include "src/Components/RayCollisionVolumeComponent.hpp"
 
 constexpr static const std::int32_t GRID_RADIUS = 16;
 constexpr static const CubeCoord GRID_CENTER = {0, 0, 0};
 
 GridGenerationSystem::GridGenerationSystem(ResourceSet *resources)
-        : _ecsManager(resources->get<ECSManager>()),
+        : _entityManager(resources->get<EntityManager>()),
           _randomGenerator(resources->get<RandomGenerator>()),
           _sceneManager(resources->get<SceneManager>()) {
     //
@@ -19,16 +19,19 @@ void GridGenerationSystem::init() {
 
     auto pushCell = [&](const CubeCoord &cube) {
         auto type = this->_randomGenerator->generateInt(0, 3);
-        auto entity = this->_ecsManager->createEntity();
+        auto entity = this->_entityManager->createEntity();
 
-        auto position = this->_ecsManager->addComponent<GridPositionComponent>(entity);
+        auto position = std::make_shared<GridPositionComponent>();
         position->fromCubeCoordinates(cube);
 
-        auto cell = this->_ecsManager->addComponent<GridCellComponent>(entity);
-        cell->type() = static_cast<GridCellType>(type);
+        auto cell = std::make_shared<GridCellComponent>();
+        cell->cellType() = static_cast<CellType>(type);
         cell->building() = std::nullopt;
 
-        this->_ecsManager->addComponent<RayCollisionVolumeComponent>(entity);
+        this->_entityManager->addComponent(entity, position);
+        this->_entityManager->addComponent(entity, cell);
+        this->_entityManager->addComponent(entity, std::make_shared<RayCollisionVolumeComponent>());
+
         this->_sceneManager->insertEntityNode(root, entity);
     };
 

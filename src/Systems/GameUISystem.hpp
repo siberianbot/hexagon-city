@@ -1,25 +1,25 @@
-#ifndef HEXAGON_CITY_GAME_UI_HPP
-#define HEXAGON_CITY_GAME_UI_HPP
+#ifndef HEXAGON_CITY_SYSTEMS_GAME_UI_SYSTEM_HPP
+#define HEXAGON_CITY_SYSTEMS_GAME_UI_SYSTEM_HPP
 
 #include <memory>
 #include <optional>
 
-#include <Penrose/ECS/ECSManager.hpp>
 #include <Penrose/ECS/Entity.hpp>
+#include <Penrose/ECS/EntityManager.hpp>
 #include <Penrose/ECS/System.hpp>
-#include <Penrose/Events/EventQueue.hpp>
 #include <Penrose/Resources/Initializable.hpp>
 #include <Penrose/Resources/ResourceSet.hpp>
 
 #include <Penrose/Builtin/Debug/UI/UIContext.hpp>
 #include <Penrose/Builtin/Debug/UI/Widgets.hpp>
 
-#include "src/CitySimulationSystem.hpp"
+#include "src/InGameEvents.hpp"
 #include "src/PlayerStateContext.hpp"
+#include "CitySimulationSystem.hpp"
 
 using namespace Penrose;
 
-class GameUISystem : public Resource<GameUISystem>,
+class GameUISystem : public Resource<GameUISystem, ResourceGroup::ECSSystem>,
                      public Initializable,
                      public System {
 public:
@@ -34,8 +34,8 @@ public:
     [[nodiscard]] std::string getName() const override { return "GameUI"; }
 
 private:
-    ResourceProxy<ECSManager> _ecsManager;
-    ResourceProxy<EventQueue> _eventQueue;
+    ResourceProxy<EntityManager> _entityManager;
+    ResourceProxy<InGameEventQueue> _inGameEventQueue;
     ResourceProxy<UIContext> _uiContext;
     ResourceProxy<CitySimulationSystem> _citySimulationSystem;
     ResourceProxy<PlayerStateContext> _playerStateContext;
@@ -69,9 +69,7 @@ private:
     std::shared_ptr<Label> _populationIncomeTimerLabel;
     std::shared_ptr<Window> _simulationInsightWindow;
 
-    EventQueue::HandlerIdx _eventHandlerIdx = -1;
-
     std::optional<Entity> _selection;
 };
 
-#endif // HEXAGON_CITY_GAME_UI_HPP
+#endif // HEXAGON_CITY_SYSTEMS_GAME_UI_SYSTEM_HPP

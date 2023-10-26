@@ -12,16 +12,22 @@ deps = [
 ]
 
 src = [
-    'src/CitySimulationSystem.cpp',
-    'src/DebugCameraSystem.cpp',
-    'src/GameUISystem.cpp',
-    'src/GridBuildingsSystem.cpp',
-    'src/GridDrawableProvider.cpp',
-    'src/GridGenerationSystem.cpp',
+    'src/Main.cpp',
+
+    # Rendering
+    'src/Rendering/GridDrawableProvider.cpp',
+
+    # Systems
+    'src/Systems/CitySimulationSystem.cpp',
+    'src/Systems/DebugCameraSystem.cpp',
+    'src/Systems/GameUISystem.cpp',
+    'src/Systems/GridBuildingsSystem.cpp',
+    'src/Systems/GridGenerationSystem.cpp',
+    'src/Systems/SelectionSystem.cpp',
+
+    # Others
     'src/RandomGenerator.cpp',
     'src/Raycaster.cpp',
-    'src/SelectionSystem.cpp',
-    'src/Main.cpp',
 ]
 
 executable('hexagon_city', src, dependencies: deps)

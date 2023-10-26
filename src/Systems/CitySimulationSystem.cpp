@@ -24,42 +24,30 @@ constexpr static const float POPULATION_HAPPINESS_TIMER = 5.0f;
 constexpr static const float POPULATION_REST_TIMER = 5.0f;
 
 CitySimulationSystem::CitySimulationSystem(ResourceSet *resources)
-        : _eventQueue(resources->get<EventQueue>()),
+        : _inGameEventQueue(resources->get<InGameEventQueue>()),
           _gridBuildingsSystem(resources->get<GridBuildingsSystem>()),
           _randomGenerator(resources->get<RandomGenerator>()) {
     //
 }
 
 void CitySimulationSystem::init() {
-    this->_eventHandlerIdx = this->_eventQueue->addHandler<EventType::CustomEvent, CustomEventArgs>(
-            [this](const CustomEvent *event) {
-                if (event->getArgs().type == BuildingCreatedEvent::name()) {
-                    this->handleBuildingCreated(
-                            std::dynamic_pointer_cast<BuildingCreatedEvent>(event->getArgs().data)
-                    );
-                }
 
-                if (event->getArgs().type == BuildingUpgradedEvent::name()) {
-                    this->handleBuildingUpgraded(
-                            std::dynamic_pointer_cast<BuildingUpgradedEvent>(event->getArgs().data)
-                    );
-                }
+    this->_inGameEventQueue->addHandler<BuildingCreatedEvent>([this](const BuildingCreatedEvent *event) {
+        this->handleBuildingCreated(event);
+    });
 
-                if (event->getArgs().type == BuildingDestroyedEvent::name()) {
-                    this->handleBuildingDestroyed(
-                            std::dynamic_pointer_cast<BuildingDestroyedEvent>(event->getArgs().data)
-                    );
-                }
-            });
+    this->_inGameEventQueue->addHandler<BuildingUpgradedEvent>([this](const BuildingUpgradedEvent *event) {
+        this->handleBuildingUpgraded(event);
+    });
+
+    this->_inGameEventQueue->addHandler<BuildingDestroyedEvent>([this](const BuildingDestroyedEvent *event) {
+        this->handleBuildingDestroyed(event);
+    });
 
     this->_residentials.clear();
     this->_industrials.clear();
     this->_commercials.clear();
     this->_populationIncomeTimer = POPULATION_TIMER;
-}
-
-void CitySimulationSystem::destroy() {
-    this->_eventQueue->removeHandler(this->_eventHandlerIdx);
 }
 
 void CitySimulationSystem::update(float delta) {
@@ -69,11 +57,11 @@ void CitySimulationSystem::update(float delta) {
     this->updateCommercials(delta);
 }
 
-void CitySimulationSystem::handleBuildingCreated(const std::shared_ptr<BuildingCreatedEvent> &event) {
-    switch (event->getBuildingType()) {
-        case GridBuildingType::Residential:
+void CitySimulationSystem::handleBuildingCreated(const BuildingCreatedEvent *event) {
+    switch (event->getType()) {
+        case BuildingType::Residential:
             this->_residentials.emplace(
-                    event->getBuildingEntity(),
+                    event->getBuilding(),
                     ResidentialData{
                             .residents = {},
                             .count = 0,
@@ -82,9 +70,9 @@ void CitySimulationSystem::handleBuildingCreated(const std::shared_ptr<BuildingC
             );
             break;
 
-        case GridBuildingType::Industrial:
+        case BuildingType::Industrial:
             this->_industrials.emplace(
-                    event->getBuildingEntity(),
+                    event->getBuilding(),
                     IndustrialData{
                             .employeesCapacity = INDUSTRIAL_BASE_EMPLOYEES_CAPACITY,
                             .products = 0,
@@ -95,9 +83,9 @@ void CitySimulationSystem::handleBuildingCreated(const std::shared_ptr<BuildingC
             );
             break;
 
-        case GridBuildingType::Commercial:
+        case BuildingType::Commercial:
             this->_commercials.emplace(
-                    event->getBuildingEntity(),
+                    event->getBuilding(),
                     CommercialData{
                             .happiness = 0,
                             .happinessCapacity = COMMERCIAL_BASE_HAPPINESS_CAPACITY,
@@ -112,39 +100,39 @@ void CitySimulationSystem::handleBuildingCreated(const std::shared_ptr<BuildingC
     }
 }
 
-void CitySimulationSystem::handleBuildingUpgraded(const std::shared_ptr<BuildingUpgradedEvent> &event) {
-    switch (event->getBuildingType()) {
-        case GridBuildingType::Residential: {
+void CitySimulationSystem::handleBuildingUpgraded(const BuildingUpgradedEvent *event) {
+    switch (event->getType()) {
+        case BuildingType::Residential: {
             auto residential = orElseThrow(
-                    tryGetPointer(this->_residentials, event->getBuildingEntity()),
+                    tryGetPointer(this->_residentials, event->getBuilding()),
                     std::logic_error("No such residential building data")
             );
 
-            residential->capacity = event->getNewLevel() * RESIDENTIAL_BASE_CAPACITY;
+            residential->capacity = event->getLevel() * RESIDENTIAL_BASE_CAPACITY;
 
             break;
         }
 
-        case GridBuildingType::Industrial: {
+        case BuildingType::Industrial: {
             auto industrial = orElseThrow(
-                    tryGetPointer(this->_industrials, event->getBuildingEntity()),
+                    tryGetPointer(this->_industrials, event->getBuilding()),
                     std::logic_error("No such industrial building data")
             );
 
-            industrial->employeesCapacity = event->getNewLevel() * INDUSTRIAL_BASE_EMPLOYEES_CAPACITY;
-            industrial->productCapacity = event->getNewLevel() * INDUSTRIAL_BASE_PRODUCT_CAPACITY;
+            industrial->employeesCapacity = event->getLevel() * INDUSTRIAL_BASE_EMPLOYEES_CAPACITY;
+            industrial->productCapacity = event->getLevel() * INDUSTRIAL_BASE_PRODUCT_CAPACITY;
             industrial->productMultiplier = 2 * industrial->productMultiplier;
 
             break;
         }
 
-        case GridBuildingType::Commercial: {
+        case BuildingType::Commercial: {
             auto commercial = orElseThrow(
-                    tryGetPointer(this->_commercials, event->getBuildingEntity()),
+                    tryGetPointer(this->_commercials, event->getBuilding()),
                     std::logic_error("No such commercial building data")
             );
 
-            commercial->happinessCapacity = event->getNewLevel() * COMMERCIAL_BASE_HAPPINESS_CAPACITY;
+            commercial->happinessCapacity = event->getLevel() * COMMERCIAL_BASE_HAPPINESS_CAPACITY;
             commercial->happinessMultiplier = 2 * commercial->happinessMultiplier;
 
             break;
@@ -155,18 +143,18 @@ void CitySimulationSystem::handleBuildingUpgraded(const std::shared_ptr<Building
     }
 }
 
-void CitySimulationSystem::handleBuildingDestroyed(const std::shared_ptr<BuildingDestroyedEvent> &event) {
-    switch (event->getBuildingType()) {
-        case GridBuildingType::Residential:
-            this->_residentials.erase(event->getBuildingEntity());
+void CitySimulationSystem::handleBuildingDestroyed(const BuildingDestroyedEvent *event) {
+    switch (event->getType()) {
+        case BuildingType::Residential:
+            this->_residentials.erase(event->getBuilding());
             break;
 
-        case GridBuildingType::Industrial:
-            this->_industrials.erase(event->getBuildingEntity());
+        case BuildingType::Industrial:
+            this->_industrials.erase(event->getBuilding());
             break;
 
-        case GridBuildingType::Commercial:
-            this->_commercials.erase(event->getBuildingEntity());
+        case BuildingType::Commercial:
+            this->_commercials.erase(event->getBuilding());
             break;
 
         default:
@@ -247,7 +235,7 @@ void CitySimulationSystem::updateIndustrials(float delta) {
         }
 
         std::uint32_t totalCount = 0;
-        auto nearestResidentials = this->_gridBuildingsSystem->getAllNearest(industrial, GridBuildingType::Residential);
+        auto nearestResidentials = this->_gridBuildingsSystem->getAllNearest(industrial, BuildingType::Residential);
 
         for (const auto &residential: nearestResidentials) {
             if (industrialData.products == industrialData.productCapacity) {
@@ -306,7 +294,7 @@ void CitySimulationSystem::updateCommercials(float delta) {
         }
 
         auto nearestIndustrials = this->_gridBuildingsSystem->getAllNearest(commercial,
-                                                                            GridBuildingType::Industrial);
+                                                                            BuildingType::Industrial);
 
         for (const auto &industrial: nearestIndustrials) {
             if (commercialData.happiness == commercialData.happinessCapacity) {
@@ -329,7 +317,7 @@ void CitySimulationSystem::updateCommercials(float delta) {
         }
 
         auto nearestResidentials = this->_gridBuildingsSystem->getAllNearest(commercial,
-                                                                             GridBuildingType::Residential);
+                                                                             BuildingType::Residential);
 
         for (const auto &residential: nearestResidentials) {
             auto residentialData = orElseThrow(

@@ -6,37 +6,29 @@
 
 #include <glm/geometric.hpp>
 
-#include "src/GridBuildingComponent.hpp"
-#include "src/GridCellComponent.hpp"
+#include <Penrose/Math/NumericFuncs.hpp>
+
 #include "src/GridConstants.hpp"
-#include "src/GridPositionComponent.hpp"
-#include "src/RayCollisionVolumeComponent.hpp"
-
-template<typename T>
-constexpr inline T max(const T &a, const T &b) {
-    return a < b ? b : a;
-}
-
-template<typename T, typename ...Args>
-constexpr inline T max(const T &a, const T &b, const Args &...args) {
-    return max(max(a, b), args...);
-}
+#include "src/Components/GridBuildingComponent.hpp"
+#include "src/Components/GridCellComponent.hpp"
+#include "src/Components/GridPositionComponent.hpp"
+#include "src/Components/RayCollisionVolumeComponent.hpp"
 
 Raycaster::Raycaster(ResourceSet *resources)
-        : _ecsManager(resources->get<ECSManager>()) {
+        : _entityManager(resources->get<EntityManager>()) {
     //
 }
 
 std::optional<Entity> Raycaster::collide(const glm::vec3 &position, const glm::vec3 &direction) {
 
-    auto query = ECSQuery().component<RayCollisionVolumeComponent>();
-
-    auto candidates = this->_ecsManager->query(query) |
-                      std::views::filter([&](const ECSEntry &entry) {
-                          return this->_ecsManager->tryGetComponent<GridPositionComponent>(entry.entity).has_value();
+    auto candidates = this->_entityManager->query()
+                              .component<RayCollisionVolumeComponent>()
+                              .all() |
+                      std::views::filter([&](const EntityManager::Entry &entry) {
+                          return this->_entityManager->hasComponent<GridPositionComponent>(entry.entity);
                       }) |
-                      std::views::transform([&](const ECSEntry &entry) {
-                          auto component = this->_ecsManager->getComponent<GridPositionComponent>(entry.entity);
+                      std::views::transform([&](const EntityManager::Entry &entry) {
+                          auto component = this->_entityManager->getComponent<GridPositionComponent>(entry.entity);
                           auto position = glm::vec3(sqrt(3) * component->column() + sqrt(3) / 2 * component->row(),
                                                     0,
                                                     3. / 2 * component->row());
@@ -48,8 +40,8 @@ std::optional<Entity> Raycaster::collide(const glm::vec3 &position, const glm::v
 
                           auto scale = glm::vec3(1);
 
-                          auto maybeBuilding = this->_ecsManager->tryGetComponent<GridBuildingComponent>(entity);
-                          auto maybeCell = this->_ecsManager->tryGetComponent<GridCellComponent>(entity);
+                          auto maybeBuilding = this->_entityManager->tryGetComponent<GridBuildingComponent>(entity);
+                          auto maybeCell = this->_entityManager->tryGetComponent<GridCellComponent>(entity);
 
                           if (maybeBuilding.has_value()) {
                               scale.y = (*maybeBuilding)->level() * GRID_BUILDING_PER_LEVEL_HEIGHT;

@@ -2,32 +2,34 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-#include <Penrose/Events/InputEvent.hpp>
 #include <Penrose/Math/Constants.hpp>
 #include <Penrose/Math/NumericFuncs.hpp>
 
 #include <Penrose/Builtin/Penrose/ECS/ViewComponent.hpp>
 
 DebugCameraSystem::DebugCameraSystem(ResourceSet *resources)
-        : _ecsManager(resources->get<ECSManager>()),
-          _eventQueue(resources->get<EventQueue>()),
+        : _entityManager(resources->get<EntityManager>()),
+          _inputEventQueue(resources->get<InputEventQueue>()),
           _inputHandler(resources->get<InputHandler>()),
           _sceneManager(resources->get<SceneManager>()),
           _surfaceManager(resources->get<SurfaceManager>()) {
-//
+    //
 }
 
 void DebugCameraSystem::init() {
     auto root = this->_sceneManager->getOrAddRoot("City");
 
-    auto entity = this->_ecsManager->createEntity();
+    auto entity = this->_entityManager->createEntity();
 
-    auto transform = this->_ecsManager->addComponent<TransformComponent>(entity);
+    auto transform = std::make_shared<TransformComponent>();
     transform->getPos() = glm::vec3(0, 6, 0);
     transform->getRot() = glm::vec3(0, 0, glm::radians(-90.0f));
 
-    auto perspective = this->_ecsManager->addComponent<PerspectiveCameraComponent>(entity);
-    this->_ecsManager->addComponent<ViewComponent>(entity);
+    auto perspective = std::make_shared<PerspectiveCameraComponent>();
+
+    this->_entityManager->addComponent(entity, transform);
+    this->_entityManager->addComponent(entity, perspective);
+    this->_entityManager->addComponent(entity, std::make_shared<ViewComponent>());
 
     this->_currentCamera = Camera{
             .entity = entity,
@@ -39,70 +41,49 @@ void DebugCameraSystem::init() {
 
     this->_sceneManager->insertEntityNode(root, entity);
 
-    this->_eventHandlerIdx = this->_eventQueue->addHandler<EventType::InputEvent, InputEventArgs>(
-            [this](const InputEvent *event) {
+    this->_inputEventQueue->addHandler<KeyStateUpdatedEvent>([this](const KeyStateUpdatedEvent *event) {
+        if (event->getKey() != InputKey::F1 || event->getState() != InputState::Pressed) {
+            return;
+        }
 
-                if (!this->_currentCamera.has_value()) {
-                    return;
-                }
+        switch (this->_currentCamera->state) {
+            case CameraState::Unfocused:
+                this->_currentCamera->state = CameraState::Focused;
+                this->_surfaceManager->getSurface()->lockCursor();
+                break;
 
-                switch (event->getArgs().type) {
-                    case InputEventType::KeyStateUpdated: {
-                        auto [key, state] = event->getArgs().keyState;
+            case CameraState::Focused:
+                this->_currentCamera->state = CameraState::Unfocused;
+                this->_surfaceManager->getSurface()->unlockCursor();
+                break;
 
-                        if (key != InputKey::F1 || state != InputState::Pressed) {
-                            return;
-                        }
+            default:
+                break;
+        }
+    });
 
-                        switch (this->_currentCamera->state) {
-                            case CameraState::Unfocused:
-                                this->_currentCamera->state = CameraState::Focused;
-                                this->_surfaceManager->getSurface()->lockCursor();
-                                break;
+    this->_inputEventQueue->addHandler<MouseMovementEvent>([this](const MouseMovementEvent *event) {
+        if (this->_currentCamera->state != CameraState::Focused) {
+            return;
+        }
 
-                            case CameraState::Focused:
-                                this->_currentCamera->state = CameraState::Unfocused;
-                                this->_surfaceManager->getSurface()->unlockCursor();
-                                break;
+        auto [dx, dy] = event->getDelta();
+        auto [phi, theta] = this->_currentCamera->rotation;
 
-                            default:
-                                break;
-                        }
-
-                        break;
-                    }
-
-                    case InputEventType::MouseMoved: {
-                        if (this->_currentCamera->state != CameraState::Focused) {
-                            return;
-                        }
-
-                        auto [dx, dy] = event->getArgs().mousePosDelta;
-                        auto [phi, theta] = this->_currentCamera->rotation;
-
-                        this->_currentCamera->rotation = {
-                                cycle<float>(phi - dx, 0.0f, 2 * PI_F),
-                                std::clamp(theta + dy, -PI_2_F, PI_2_F)
-                        };
-
-                        break;
-                    }
-
-                    default:
-                        break;
-                }
-            });
+        this->_currentCamera->rotation = {
+                cycle<float>(phi - dx, 0.0f, 2 * PI_F),
+                std::clamp(theta + dy, -PI_2_F, PI_2_F)
+        };
+    });
 }
 
 void DebugCameraSystem::destroy() {
-    this->_eventQueue->removeHandler(this->_eventHandlerIdx);
-
     if (!this->_currentCamera.has_value()) {
         return;
     }
 
     auto entity = this->_currentCamera->entity;
-    this->_ecsManager->destroyEntity(std::forward<decltype(entity)>(entity));
+    this->_entityManager->destroyEntity(entity);
 
     this->_currentCamera = std::nullopt;
 }

@@ -3,13 +3,12 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "src/GridConstants.hpp"
-#include "src/HoveredComponent.hpp"
-#include "src/SelectedComponent.hpp"
-#include "src/SelectionChangedEvent.hpp"
+#include "src/Components/HoveredComponent.hpp"
+#include "src/Components/SelectedComponent.hpp"
 
 SelectionSystem::SelectionSystem(ResourceSet *resources)
-        : _ecsManager(resources->get<ECSManager>()),
-          _eventQueue(resources->get<EventQueue>()),
+        : _entityManager(resources->get<EntityManager>()),
+          _inGameEventQueue(resources->get<InGameEventQueue>()),
           _inputHandler(resources->get<InputHandler>()),
           _raycaster(resources->get<Raycaster>()),
           _surfaceManager(resources->get<SurfaceManager>()),
@@ -64,11 +63,11 @@ void SelectionSystem::update(float) {
     if (newHovered != this->_hovered) {
 
         if (newHovered.has_value()) {
-            this->_ecsManager->addComponent<HoveredComponent>(*newHovered);
+            this->_entityManager->addComponent(*newHovered, std::make_shared<HoveredComponent>());
         }
 
         if (this->_hovered.has_value()) {
-            this->_ecsManager->removeComponent<HoveredComponent>(*this->_hovered);
+            this->_entityManager->removeComponent<HoveredComponent>(*this->_hovered);
         }
 
         this->_hovered = newHovered;
@@ -81,17 +80,15 @@ void SelectionSystem::update(float) {
     if (this->_hovered != this->_selected) {
 
         if (this->_selected.has_value()) {
-            this->_ecsManager->removeComponent<SelectedComponent>(*this->_selected);
+            this->_entityManager->removeComponent<SelectedComponent>(*this->_selected);
         }
 
         if (this->_hovered.has_value()) {
-            this->_ecsManager->addComponent<SelectedComponent>(*this->_hovered);
+            this->_entityManager->addComponent(*this->_hovered, std::make_shared<SelectedComponent>());
         }
 
         this->_selected = this->_hovered;
 
-        this->_eventQueue->pushEvent<EventType::CustomEvent>(
-                makeCustomEventArgs(new SelectionChangedEvent(this->_selected))
-        );
+        this->_inGameEventQueue->push<SelectionChangedEvent>(this->_selected);
     }
 }

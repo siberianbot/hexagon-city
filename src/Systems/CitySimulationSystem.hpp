@@ -1,5 +1,5 @@
-#ifndef HEXAGON_CITY_CITY_SIMULATION_SYSTEM_HPP
-#define HEXAGON_CITY_CITY_SIMULATION_SYSTEM_HPP
+#ifndef HEXAGON_CITY_SYSTEMS_CITY_SIMULATION_SYSTEM_HPP
+#define HEXAGON_CITY_SYSTEMS_CITY_SIMULATION_SYSTEM_HPP
 
 #include <list>
 #include <map>
@@ -7,19 +7,16 @@
 
 #include <Penrose/ECS/Entity.hpp>
 #include <Penrose/ECS/System.hpp>
-#include <Penrose/Events/EventQueue.hpp>
 #include <Penrose/Resources/Initializable.hpp>
 #include <Penrose/Resources/ResourceSet.hpp>
 
-#include "src/BuildingCreatedEvent.hpp"
-#include "src/BuildingDestroyedEvent.hpp"
-#include "src/BuildingUpgradedEvent.hpp"
-#include "src/GridBuildingsSystem.hpp"
+#include "src/InGameEvents.hpp"
 #include "src/RandomGenerator.hpp"
+#include "src/Systems/GridBuildingsSystem.hpp"
 
 using namespace Penrose;
 
-class CitySimulationSystem : public Resource<CitySimulationSystem>,
+class CitySimulationSystem : public Resource<CitySimulationSystem, ResourceGroup::ECSSystem>,
                              public Initializable,
                              public System {
 public:
@@ -56,7 +53,8 @@ public:
     ~CitySimulationSystem() override = default;
 
     void init() override;
-    void destroy() override;
+
+    void destroy() override { /* nothing to do */ }
 
     void update(float delta) override;
 
@@ -71,11 +69,9 @@ public:
     [[nodiscard]] const std::map<Entity, CommercialData> &getCommercials() const { return this->_commercials; }
 
 private:
-    ResourceProxy<EventQueue> _eventQueue;
+    ResourceProxy<InGameEventQueue> _inGameEventQueue;
     ResourceProxy<GridBuildingsSystem> _gridBuildingsSystem;
     ResourceProxy<RandomGenerator> _randomGenerator;
-
-    EventQueue::HandlerIdx _eventHandlerIdx = -1;
 
     std::map<Entity, ResidentialData> _residentials;
     std::map<Entity, IndustrialData> _industrials;
@@ -83,9 +79,9 @@ private:
 
     float _populationIncomeTimer;
 
-    void handleBuildingCreated(const std::shared_ptr<BuildingCreatedEvent> &event);
-    void handleBuildingUpgraded(const std::shared_ptr<BuildingUpgradedEvent> &event);
-    void handleBuildingDestroyed(const std::shared_ptr<BuildingDestroyedEvent> &event);
+    void handleBuildingCreated(const BuildingCreatedEvent *event);
+    void handleBuildingUpgraded(const BuildingUpgradedEvent *event);
+    void handleBuildingDestroyed(const BuildingDestroyedEvent *event);
 
     void updatePopulationIncome(float delta);
     void updateResidentials(float delta);
@@ -93,4 +89,4 @@ private:
     void updateCommercials(float delta);
 };
 
-#endif // HEXAGON_CITY_CITY_SIMULATION_SYSTEM_HPP
+#endif // HEXAGON_CITY_SYSTEMS_CITY_SIMULATION_SYSTEM_HPP

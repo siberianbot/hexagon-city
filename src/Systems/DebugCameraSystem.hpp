@@ -1,13 +1,13 @@
-#ifndef HEXAGON_CITY_DEBUG_CAMERA_SYSTEM_HPP
-#define HEXAGON_CITY_DEBUG_CAMERA_SYSTEM_HPP
+#ifndef HEXAGON_CITY_SYSTEMS_DEBUG_CAMERA_SYSTEM_HPP
+#define HEXAGON_CITY_SYSTEMS_DEBUG_CAMERA_SYSTEM_HPP
 
 #include <memory>
 #include <optional>
 #include <tuple>
 
 #include <Penrose/ECS/Entity.hpp>
+#include <Penrose/ECS/EntityManager.hpp>
 #include <Penrose/ECS/System.hpp>
-#include <Penrose/ECS/ECSManager.hpp>
 #include <Penrose/Events/EventQueue.hpp>
 #include <Penrose/Input/InputHandler.hpp>
 #include <Penrose/Rendering/SurfaceManager.hpp>
@@ -22,7 +22,7 @@
 
 using namespace Penrose;
 
-class DebugCameraSystem : public Resource<DebugCameraSystem>,
+class DebugCameraSystem : public Resource<DebugCameraSystem, ResourceGroup::ECSSystem>,
                           public Initializable,
                           public System {
 public:
@@ -52,14 +52,13 @@ public:
     [[nodiscard]] const Camera &getCurrentCamera() const { return (*this->_currentCamera); }
 
 private:
-    ResourceProxy<ECSManager> _ecsManager;
-    ResourceProxy<EventQueue> _eventQueue;
+    ResourceProxy<EntityManager> _entityManager;
+    ResourceProxy<InputEventQueue> _inputEventQueue;
     ResourceProxy<InputHandler> _inputHandler;
     ResourceProxy<SceneManager> _sceneManager;
     ResourceProxy<SurfaceManager> _surfaceManager;
 
     std::optional<Camera> _currentCamera;
-    EventQueue::HandlerIdx _eventHandlerIdx = -1;
 };
 
-#endif // HEXAGON_CITY_DEBUG_CAMERA_SYSTEM_HPP
+#endif // HEXAGON_CITY_SYSTEMS_DEBUG_CAMERA_SYSTEM_HPP

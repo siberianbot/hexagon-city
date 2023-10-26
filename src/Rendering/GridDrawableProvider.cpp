@@ -7,18 +7,18 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "src/GridConstants.hpp"
-#include "src/GridPositionComponent.hpp"
-#include "src/HoveredComponent.hpp"
-#include "src/SelectedComponent.hpp"
+#include "src/Components/GridPositionComponent.hpp"
+#include "src/Components/HoveredComponent.hpp"
+#include "src/Components/SelectedComponent.hpp"
 
 GridDrawableProvider::GridDrawableProvider(ResourceSet *resources)
-        : _ecsManager(resources->get<ECSManager>()) {
+        : _entityManager(resources->get<EntityManager>()) {
     //
 }
 
 std::vector<Drawable> GridDrawableProvider::getDrawablesFor(const Entity &entity) {
 
-    auto maybeCell = this->_ecsManager->tryGetComponent<GridCellComponent>(entity);
+    auto maybeCell = this->_entityManager->tryGetComponent<GridCellComponent>(entity);
 
     if (!maybeCell.has_value()) {
         return {};
@@ -33,9 +33,9 @@ std::vector<Drawable> GridDrawableProvider::getDrawablesFor(const Entity &entity
     if ((*maybeCell)->building().has_value()) {
 
         auto building = *(*maybeCell)->building();
-        auto maybeBuildingDrawable = this->createDrawable(building,
-                                                          this->_ecsManager->getComponent<GridBuildingComponent>(
-                                                                  building));
+        auto maybeBuildingDrawable = this->createDrawable(
+                building,
+                this->_entityManager->getComponent<GridBuildingComponent>(building));
 
         if (maybeBuildingDrawable.has_value()) {
             return {
@@ -53,7 +53,7 @@ std::vector<Drawable> GridDrawableProvider::getDrawablesFor(const Entity &entity
 std::optional<Drawable> GridDrawableProvider::createDrawable(Entity entity,
                                                              const std::shared_ptr<GridBuildingComponent> &gridBuilding) {
 
-    auto maybePosition = this->_ecsManager->tryGetComponent<GridPositionComponent>(entity);
+    auto maybePosition = this->_entityManager->tryGetComponent<GridPositionComponent>(entity);
 
     if (!maybePosition.has_value()) {
         return std::nullopt;
@@ -67,14 +67,14 @@ std::optional<Drawable> GridDrawableProvider::createDrawable(Entity entity,
                                                     (*maybePosition)->column(),
                                                     0.75, gridBuilding->level() * GRID_BUILDING_PER_LEVEL_HEIGHT),
             .modelRot = glm::mat4(1),
-            .color = GRID_BUILDING_COLORS[static_cast<std::uint32_t>(gridBuilding->type())]
+            .color = GRID_BUILDING_COLORS[static_cast<std::uint32_t>(gridBuilding->buildingType())]
     };
 
-    if (this->_ecsManager->hasComponent<HoveredComponent>(entity)) {
+    if (this->_entityManager->hasComponent<HoveredComponent>(entity)) {
         drawable.color = GRID_HOVERED_COLOR;
     }
 
-    if (this->_ecsManager->hasComponent<SelectedComponent>(entity)) {
+    if (this->_entityManager->hasComponent<SelectedComponent>(entity)) {
         drawable.color = GRID_SELECTED_COLOR;
     }
 
@@ -84,7 +84,7 @@ std::optional<Drawable> GridDrawableProvider::createDrawable(Entity entity,
 std::optional<Drawable> GridDrawableProvider::createDrawable(Entity entity,
                                                              const std::shared_ptr<GridCellComponent> &gridCell) {
 
-    auto maybePosition = this->_ecsManager->tryGetComponent<GridPositionComponent>(entity);
+    auto maybePosition = this->_entityManager->tryGetComponent<GridPositionComponent>(entity);
 
     if (!maybePosition.has_value()) {
         return std::nullopt;
@@ -98,14 +98,14 @@ std::optional<Drawable> GridDrawableProvider::createDrawable(Entity entity,
                                                     (*maybePosition)->column(),
                                                     1, GRID_CELL_HEIGHT),
             .modelRot = glm::mat4(1),
-            .color = GRID_CELL_COLORS[static_cast<std::uint32_t>(gridCell->type())]
+            .color = GRID_CELL_COLORS[static_cast<std::uint32_t>(gridCell->cellType())]
     };
 
-    if (this->_ecsManager->hasComponent<HoveredComponent>(entity)) {
+    if (this->_entityManager->hasComponent<HoveredComponent>(entity)) {
         drawable.color = GRID_HOVERED_COLOR;
     }
 
-    if (this->_ecsManager->hasComponent<SelectedComponent>(entity)) {
+    if (this->_entityManager->hasComponent<SelectedComponent>(entity)) {
         drawable.color = GRID_SELECTED_COLOR;
     }
 

@@ -2,16 +2,12 @@
 
 #include <fmt/core.h>
 
-#include "src/BuildingCreateRequestedEvent.hpp"
-#include "src/BuildingDestroyRequestedEvent.hpp"
-#include "src/BuildingUpgradeRequestedEvent.hpp"
-#include "src/GridBuildingComponent.hpp"
-#include "src/GridCellComponent.hpp"
-#include "src/SelectionChangedEvent.hpp"
+#include "src/Components/GridBuildingComponent.hpp"
+#include "src/Components/GridCellComponent.hpp"
 
 GameUISystem::GameUISystem(ResourceSet *resources)
-        : _ecsManager(resources->get<ECSManager>()),
-          _eventQueue(resources->get<EventQueue>()),
+        : _entityManager(resources->get<EntityManager>()),
+          _inGameEventQueue(resources->get<InGameEventQueue>()),
           _uiContext(resources->get<UIContext>()),
           _citySimulationSystem(resources->get<CitySimulationSystem>()),
           _playerStateContext(resources->get<PlayerStateContext>()) {
@@ -23,9 +19,9 @@ void GameUISystem::init() {
     auto buildingTypeDropDown = std::shared_ptr<DropDown>(new DropDown( // NOLINT(modernize-make-shared)
             "Building Type",
             {
-                    {static_cast<std::uint64_t>(GridBuildingType::Residential), "Residential"},
-                    {static_cast<std::uint64_t>(GridBuildingType::Commercial),  "Commercial"},
-                    {static_cast<std::uint64_t>(GridBuildingType::Industrial),  "Industrial"}
+                    {static_cast<std::uint64_t>(BuildingType::Residential), "Residential"},
+                    {static_cast<std::uint64_t>(BuildingType::Commercial),  "Commercial"},
+                    {static_cast<std::uint64_t>(BuildingType::Industrial),  "Industrial"}
             }));
 
     this->_cellContainer = std::shared_ptr<Container>(new Container( // NOLINT(modernize-make-shared)
@@ -38,10 +34,9 @@ void GameUISystem::init() {
                             return;
                         }
 
-                        this->_eventQueue->pushEvent<EventType::CustomEvent>(
-                                makeCustomEventArgs(new BuildingCreateRequestedEvent(
-                                        *this->_selection,
-                                        static_cast<GridBuildingType>(*buildingTypeDropDown->getSelected())))
+                        this->_inGameEventQueue->push<CreateBuildingRequestEvent>(
+                                *this->_selection,
+                                static_cast<BuildingType>(*buildingTypeDropDown->getSelected())
                         );
                     })
             }));
@@ -49,14 +44,10 @@ void GameUISystem::init() {
     this->_buildingContainer = std::shared_ptr<Container>(new Container( // NOLINT(modernize-make-shared)
             {
                     std::make_shared<Button>("Upgrade building", [this]() {
-                        this->_eventQueue->pushEvent<EventType::CustomEvent>(
-                                makeCustomEventArgs(new BuildingUpgradeRequestedEvent(*this->_selection))
-                        );
+                        this->_inGameEventQueue->push<UpgradeBuildingRequestEvent>(*this->_selection);
                     }),
                     std::make_shared<Button>("Destroy building", [this]() {
-                        this->_eventQueue->pushEvent<EventType::CustomEvent>(
-                                makeCustomEventArgs(new BuildingDestroyRequestedEvent(*this->_selection))
-                        );
+                        this->_inGameEventQueue->push<DestroyBuildingRequestEvent>(*this->_selection);
                         this->_selection = std::nullopt;
                     })
             }));
@@ -134,19 +125,12 @@ void GameUISystem::init() {
     this->_uiContext->setRoot("Player", this->_playerWindow);
     this->_uiContext->setRoot("SimulationInsight", this->_simulationInsightWindow);
 
-    this->_eventHandlerIdx = this->_eventQueue->addHandler<EventType::CustomEvent, CustomEventArgs>(
-            [this](const CustomEvent *event) {
-                if (event->getArgs().type == SelectionChangedEvent::name()) {
-                    auto selectionChanged = std::dynamic_pointer_cast<SelectionChangedEvent>(event->getArgs().data);
-
-                    this->_selection = selectionChanged->getNewSelection();
-                }
-            });
+    this->_inGameEventQueue->addHandler<SelectionChangedEvent>([this](const SelectionChangedEvent *event) {
+        this->_selection = event->getSelection();
+    });
 }
 
 void GameUISystem::destroy() {
-    this->_eventQueue->removeHandler(this->_eventHandlerIdx);
-
     this->_uiContext->removeRoot("Selection");
     this->_uiContext->removeRoot("Player");
     this->_uiContext->removeRoot("SimulationInsight");
@@ -166,21 +150,21 @@ void GameUISystem::update(float) {
     this->_selectionWindow->setVisible(this->_selection.has_value());
 
     if (this->_selection.has_value()) {
-        this->_cellContainer->setVisible(this->_ecsManager->hasComponent<GridCellComponent>(*this->_selection));
+        this->_cellContainer->setVisible(this->_entityManager->hasComponent<GridCellComponent>(*this->_selection));
 
-        auto maybeBuilding = this->_ecsManager->tryGetComponent<GridBuildingComponent>(*this->_selection);
+        auto maybeBuilding = this->_entityManager->tryGetComponent<GridBuildingComponent>(*this->_selection);
 
         this->_buildingContainer->setVisible(maybeBuilding.has_value());
         this->_residentialInsightContainer->setVisible(maybeBuilding.has_value() &&
-                                                       (*maybeBuilding)->type() == GridBuildingType::Residential);
+                                                       (*maybeBuilding)->buildingType() == BuildingType::Residential);
         this->_industrialInsightContainer->setVisible(maybeBuilding.has_value() &&
-                                                      (*maybeBuilding)->type() == GridBuildingType::Industrial);
+                                                      (*maybeBuilding)->buildingType() == BuildingType::Industrial);
         this->_commercialInsightContainer->setVisible(maybeBuilding.has_value() &&
-                                                      (*maybeBuilding)->type() == GridBuildingType::Commercial);
+                                                      (*maybeBuilding)->buildingType() == BuildingType::Commercial);
 
         if (maybeBuilding.has_value()) {
-            switch ((*maybeBuilding)->type()) {
-                case GridBuildingType::Residential: {
+            switch ((*maybeBuilding)->buildingType()) {
+                case BuildingType::Residential: {
                     auto maybeResidential = tryGetPointer(this->_citySimulationSystem->getResidentials(),
                                                           *this->_selection);
 
@@ -216,7 +200,7 @@ void GameUISystem::update(float) {
                     break;
                 }
 
-                case GridBuildingType::Industrial: {
+                case BuildingType::Industrial: {
                     auto maybeIndustrial = tryGetPointer(this->_citySimulationSystem->getIndustrials(),
                                                          *this->_selection);
 
@@ -240,7 +224,7 @@ void GameUISystem::update(float) {
                     break;
                 }
 
-                case GridBuildingType::Commercial: {
+                case BuildingType::Commercial: {
                     auto maybeCommercial = tryGetPointer(this->_citySimulationSystem->getCommercials(),
                                                          *this->_selection);
 

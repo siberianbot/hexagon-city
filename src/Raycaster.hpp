@@ -5,13 +5,13 @@
 
 #include <glm/vec3.hpp>
 
-#include <Penrose/ECS/ECSManager.hpp>
 #include <Penrose/ECS/Entity.hpp>
+#include <Penrose/ECS/EntityManager.hpp>
 #include <Penrose/Resources/ResourceSet.hpp>
 
 using namespace Penrose;
 
-class Raycaster : public Resource<Raycaster> {
+class Raycaster : public Resource<Raycaster, ResourceGroup::Custom> {
 public:
     explicit Raycaster(ResourceSet *resources);
     ~Raycaster() override = default;
@@ -20,7 +20,7 @@ public:
                                                 const glm::vec3 &direction);
 
 private:
-    ResourceProxy<ECSManager> _ecsManager;
+    ResourceProxy<EntityManager> _entityManager;
 };
 
 #endif // HEXAGON_CITY_RAYCASTER_HPP

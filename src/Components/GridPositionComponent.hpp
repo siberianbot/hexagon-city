@@ -1,17 +1,16 @@
-#ifndef HEXAGON_CITY_GRID_POSITION_COMPONENT_HPP
-#define HEXAGON_CITY_GRID_POSITION_COMPONENT_HPP
+#ifndef HEXAGON_CITY_COMPONENTS_GRID_POSITION_COMPONENT_HPP
+#define HEXAGON_CITY_COMPONENTS_GRID_POSITION_COMPONENT_HPP
 
 #include <cstdint>
 
 #include <Penrose/ECS/Component.hpp>
 #include <Penrose/ECS/ComponentFactory.hpp>
-#include <Penrose/Resources/Resource.hpp>
 
 #include "src/HexCoordinates.hpp"
 
 using namespace Penrose;
 
-class GridPositionComponent : public Component {
+class GridPositionComponent : public Component<GridPositionComponent> {
 public:
     ~GridPositionComponent() override = default;
 
@@ -25,17 +24,10 @@ public:
         this->_coord = convert<CubeCoord, AxialCoord>(cube);
     }
 
-    [[nodiscard]] std::string getName() const override { return name(); }
-
-    [[nodiscard]] constexpr static std::string name() { return "GridPosition"; }
-
 private:
     AxialCoord _coord;
 };
 
-class GridPositionComponentFactory : public Resource<GridPositionComponentFactory>,
-                                     public GenericComponentFactory<GridPositionComponent> {
-    //
-};
+using GridPositionComponentFactory = GenericComponentFactory<GridPositionComponent>;
 
-#endif // HEXAGON_CITY_GRID_POSITION_COMPONENT_HPP
+#endif // HEXAGON_CITY_COMPONENTS_GRID_POSITION_COMPONENT_HPP

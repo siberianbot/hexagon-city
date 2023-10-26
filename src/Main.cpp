@@ -4,28 +4,28 @@
 #include <Penrose/Engine.hpp>
 #include <Penrose/Assets/AssetDictionary.hpp>
 #include <Penrose/Assets/AssetManager.hpp>
-#include <Penrose/ECS/ECSManager.hpp>
 #include <Penrose/Rendering/RenderGraphContext.hpp>
 
 #include <Penrose/Builtin/Penrose/Rendering/ForwardSceneDrawRenderOperator.hpp>
 #include <Penrose/Builtin/Debug/Rendering/DebugUIDrawRenderOperator.hpp>
 
-#include "src/CitySimulationSystem.hpp"
-#include "src/DebugCameraSystem.hpp"
-#include "src/GameUISystem.hpp"
-#include "src/GridBuildingComponent.hpp"
-#include "src/GridBuildingsSystem.hpp"
-#include "src/GridCellComponent.hpp"
-#include "src/GridDrawableProvider.hpp"
-#include "src/GridGenerationSystem.hpp"
-#include "src/GridPositionComponent.hpp"
-#include "src/HoveredComponent.hpp"
+#include "src/InGameEvents.hpp"
 #include "src/PlayerStateContext.hpp"
 #include "src/RandomGenerator.hpp"
 #include "src/Raycaster.hpp"
-#include "src/RayCollisionVolumeComponent.hpp"
-#include "src/SelectedComponent.hpp"
-#include "src/SelectionSystem.hpp"
+#include "src/Components/GridBuildingComponent.hpp"
+#include "src/Components/GridCellComponent.hpp"
+#include "src/Components/GridPositionComponent.hpp"
+#include "src/Components/HoveredComponent.hpp"
+#include "src/Components/RayCollisionVolumeComponent.hpp"
+#include "src/Components/SelectedComponent.hpp"
+#include "src/Rendering/GridDrawableProvider.hpp"
+#include "src/Systems/CitySimulationSystem.hpp"
+#include "src/Systems/DebugCameraSystem.hpp"
+#include "src/Systems/GameUISystem.hpp"
+#include "src/Systems/GridBuildingsSystem.hpp"
+#include "src/Systems/GridGenerationSystem.hpp"
+#include "src/Systems/SelectionSystem.hpp"
 
 using namespace Penrose;
 
@@ -72,44 +72,61 @@ int main() {
 
     Engine engine;
 
-    engine.resources().add<GridBuildingComponentFactory>().implements<ComponentFactory>().done();
-    engine.resources().add<GridCellComponentFactory>().implements<ComponentFactory>().done();
-    engine.resources().add<GridPositionComponentFactory>().implements<ComponentFactory>().done();
-    engine.resources().add<RayCollisionVolumeComponentFactory>().implements<ComponentFactory>().done();
-    engine.resources().add<HoveredComponentFactory>().implements<ComponentFactory>().done();
-    engine.resources().add<SelectedComponentFactory>().implements<ComponentFactory>().done();
-
-    engine.resources().add<CitySimulationSystem>()
+    engine.resources().add<InGameEventQueue, ResourceGroup::Events>()
             .implements<Initializable>()
-            .implements<System>()
-            .done();
-    engine.resources().add<DebugCameraSystem>()
-            .implements<Initializable>()
-            .implements<System>()
-            .done();
-    engine.resources().add<GameUISystem>()
-            .implements<Initializable>()
-            .implements<System>()
-            .done();
-    engine.resources().add<GridBuildingsSystem>()
-            .implements<Initializable>()
-            .implements<System>()
-            .done();
-    engine.resources().add<GridGenerationSystem>()
-            .implements<Initializable>()
-            .implements<System>()
-            .done();
-    engine.resources().add<SelectionSystem>()
-            .implements<System>()
+            .implements<Updatable>()
             .done();
 
-    engine.resources().add<GridDrawableProvider>()
+    engine.resources().add<GridBuildingComponentFactory, ResourceGroup::ECSComponent>()
+            .implements<ComponentFactory>()
+            .done();
+    engine.resources().add<GridCellComponentFactory, ResourceGroup::ECSComponent>()
+            .implements<ComponentFactory>()
+            .done();
+    engine.resources().add<GridPositionComponentFactory, ResourceGroup::ECSComponent>()
+            .implements<ComponentFactory>()
+            .done();
+    engine.resources().add<RayCollisionVolumeComponentFactory, ResourceGroup::ECSComponent>()
+            .implements<ComponentFactory>()
+            .done();
+    engine.resources().add<HoveredComponentFactory, ResourceGroup::ECSComponent>()
+            .implements<ComponentFactory>()
+            .done();
+    engine.resources().add<SelectedComponentFactory, ResourceGroup::ECSComponent>()
+            .implements<ComponentFactory>()
+            .done();
+
+    engine.resources().add<CitySimulationSystem, ResourceGroup::ECSSystem>()
+            .implements<Initializable>()
+            .implements<System>()
+            .done();
+    engine.resources().add<DebugCameraSystem, ResourceGroup::ECSSystem>()
+            .implements<Initializable>()
+            .implements<System>()
+            .done();
+    engine.resources().add<GameUISystem, ResourceGroup::ECSSystem>()
+            .implements<Initializable>()
+            .implements<System>()
+            .done();
+    engine.resources().add<GridBuildingsSystem, ResourceGroup::ECSSystem>()
+            .implements<Initializable>()
+            .implements<System>()
+            .done();
+    engine.resources().add<GridGenerationSystem, ResourceGroup::ECSSystem>()
+            .implements<Initializable>()
+            .implements<System>()
+            .done();
+    engine.resources().add<SelectionSystem, ResourceGroup::ECSSystem>()
+            .implements<System>()
+            .done();
+
+    engine.resources().add<GridDrawableProvider, ResourceGroup::Rendering>()
             .implements<DrawableProvider>()
             .done();
 
-    engine.resources().add<PlayerStateContext>().done();
-    engine.resources().add<RandomGenerator>().done();
-    engine.resources().add<Raycaster>().done();
+    engine.resources().add<PlayerStateContext, ResourceGroup::Custom>().done();
+    engine.resources().add<RandomGenerator, ResourceGroup::Custom>().done();
+    engine.resources().add<Raycaster, ResourceGroup::Custom>().done();
 
     engine.resources().get<AssetDictionary>()->addDir("data");
 

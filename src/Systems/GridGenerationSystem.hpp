@@ -1,8 +1,8 @@
-#ifndef HEXAGON_CITY_GRID_GENERATION_SYSTEM_HPP
-#define HEXAGON_CITY_GRID_GENERATION_SYSTEM_HPP
+#ifndef HEXAGON_CITY_SYSTEMS_GRID_GENERATION_SYSTEM_HPP
+#define HEXAGON_CITY_SYSTEMS_GRID_GENERATION_SYSTEM_HPP
 
+#include <Penrose/ECS/EntityManager.hpp>
 #include <Penrose/ECS/System.hpp>
-#include <Penrose/ECS/ECSManager.hpp>
 #include <Penrose/Resources/Initializable.hpp>
 #include <Penrose/Resources/ResourceSet.hpp>
 #include <Penrose/Scene/SceneManager.hpp>
@@ -12,7 +12,7 @@
 
 using namespace Penrose;
 
-class GridGenerationSystem : public Resource<GridGenerationSystem>,
+class GridGenerationSystem : public Resource<GridGenerationSystem, ResourceGroup::ECSSystem>,
                              public Initializable,
                              public System {
 public:
@@ -28,9 +28,9 @@ public:
     [[nodiscard]] std::string getName() const override { return "GridGeneration"; }
 
 private:
-    ResourceProxy<ECSManager> _ecsManager;
+    ResourceProxy<EntityManager> _entityManager;
     ResourceProxy<RandomGenerator> _randomGenerator;
     ResourceProxy<SceneManager> _sceneManager;
 };
 
-#endif // HEXAGON_CITY_GRID_GENERATION_SYSTEM_HPP
+#endif // HEXAGON_CITY_SYSTEMS_GRID_GENERATION_SYSTEM_HPP
