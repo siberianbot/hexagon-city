@@ -2,252 +2,265 @@
 
 #include <fmt/core.h>
 
-#include "src/Components/GridBuildingComponent.hpp"
-#include "src/Components/GridCellComponent.hpp"
-
 GameUISystem::GameUISystem(ResourceSet *resources)
-        : _entityManager(resources->get<EntityManager>()),
-          _inGameEventQueue(resources->get<InGameEventQueue>()),
-          _uiContext(resources->get<UIContext>()),
-          _citySimulationSystem(resources->get<CitySimulationSystem>()),
-          _playerStateContext(resources->get<PlayerStateContext>()) {
+    : _entityManager(resources->get<EntityManager>()),
+      _inGameEventQueue(resources->get<InGameEventQueue>()),
+      _uiManager(resources->get<UIManager>()),
+      _citySimulationSystem(resources->get<CitySimulationSystem>()),
+      _playerStateContext(resources->get<PlayerStateContext>()) {
     //
 }
 
 void GameUISystem::init() {
 
-    auto buildingTypeDropDown = std::shared_ptr<DropDown>(new DropDown( // NOLINT(modernize-make-shared)
-            "Building Type",
-            {
-                    {static_cast<std::uint64_t>(BuildingType::Residential), "Residential"},
-                    {static_cast<std::uint64_t>(BuildingType::Commercial),  "Commercial"},
-                    {static_cast<std::uint64_t>(BuildingType::Industrial),  "Industrial"}
-            }));
+    auto selectionOpened = std::make_shared<BooleanValue>(false);
+    auto selectedBuildingType = std::make_shared<IntegerValue>(static_cast<int>(BuildingType::Residential));
 
-    this->_cellContainer = std::shared_ptr<Container>(new Container( // NOLINT(modernize-make-shared)
-            {
-                    buildingTypeDropDown,
-                    std::make_shared<Button>("Create building", [this, buildingTypeDropDown]() {
-                        if (!buildingTypeDropDown->getSelected().has_value()) {
-                            // TODO notify "Choose building type"
-
-                            return;
-                        }
-
-                        this->_inGameEventQueue->push<CreateBuildingRequestEvent>(
-                                *this->_selection,
-                                static_cast<BuildingType>(*buildingTypeDropDown->getSelected())
+    this->_rootContext = std::make_shared<ObjectValue>(
+        ObjectValue()
+            .property<ObjectValue>(
+                "simulation",
+                ObjectValue().property<StringValue>(
+                    "population_income_timer",
+                    [this]() {
+                        return fmt::format(
+                            "Population income timer: {}",
+                            this->_citySimulationSystem->getPopulationIncomeTimer()
                         );
-                    })
-            }));
+                    },
+                    [](std::string) {}
+                )
+            )
+            .property<ObjectValue>(
+                "player",
+                ObjectValue().property<StringValue>(
+                    "balance",
+                    [this]() { return fmt::format("Balance: {}", this->_playerStateContext->balance()); },
+                    [](std::string) {}
+                )
+            )
+            .property("selection_opened", selectionOpened)
+            .property<ObjectValue>(
+                "selection",
+                ObjectValue()
+                    .property<BooleanValue>(
+                        "is_cell",
+                        [this]() { return this->_selection.has_value() && this->_selection->cell.has_value(); },
+                        [](bool) {}
+                    )
+                    .property<ListValue<StringValue>>(
+                        "building_types",
+                        ListValue<StringValue>().push("Residential").push("Industrial").push("Commercial")
+                    )
+                    .property("selected_building_type", selectedBuildingType)
+                    .property<ActionValue>(
+                        "create_building",
+                        [this, selectedBuildingType]() {
+                            if (!this->_selection.has_value()) {
+                                return;
+                            }
 
-    this->_buildingContainer = std::shared_ptr<Container>(new Container( // NOLINT(modernize-make-shared)
-            {
-                    std::make_shared<Button>("Upgrade building", [this]() {
-                        this->_inGameEventQueue->push<UpgradeBuildingRequestEvent>(*this->_selection);
-                    }),
-                    std::make_shared<Button>("Destroy building", [this]() {
-                        this->_inGameEventQueue->push<DestroyBuildingRequestEvent>(*this->_selection);
-                        this->_selection = std::nullopt;
-                    })
-            }));
+                            this->_inGameEventQueue->push<CreateBuildingRequestEvent>(
+                                this->_selection->entity,
+                                static_cast<BuildingType>(selectedBuildingType->getValue())
+                            );
+                        }
+                    )
+                    .property<BooleanValue>(
+                        "is_building",
+                        [this]() { return this->_selection.has_value() && this->_selection->building.has_value(); },
+                        [](bool) {}
+                    )
+                    .property<ActionValue>(
+                        "upgrade_building",
+                        [this]() {
+                            if (!this->_selection.has_value()) {
+                                return;
+                            }
 
-    this->_residentialCount = std::make_shared<Label>("Count: 0");
-    this->_residentialCapacity = std::make_shared<Label>("Capacity: 0");
-    this->_residentialGroupsCount = std::make_shared<Label>("Count of groups: 0");
-    this->_residentialGroups = std::make_shared<ListBox>("Groups");
-    this->_residentialInsightContainer = std::shared_ptr<Container>(new Container( // NOLINT(modernize-make-shared)
-            {
-                    std::make_shared<Label>("Residential Building"),
-                    this->_residentialCount,
-                    this->_residentialCapacity,
-                    this->_residentialGroupsCount,
-                    this->_residentialGroups
-            }));
+                            this->_inGameEventQueue->push<UpgradeBuildingRequestEvent>(this->_selection->entity);
+                        }
+                    )
+                    .property<ActionValue>(
+                        "destroy_building",
+                        [this]() {
+                            if (!this->_selection.has_value()) {
+                                return;
+                            }
 
-    this->_industrialEmployeesCapacity = std::make_shared<Label>("Employees Capacity: 0");
-    this->_industrialProducts = std::make_shared<Label>("Products: 0");
-    this->_industrialProductCapacity = std::make_shared<Label>("Product Capacity: 0");
-    this->_industrialProductMultiplier = std::make_shared<Label>("Product Multiplier: 0");
-    this->_industrialQueryTimer = std::make_shared<Label>("Query Timer: 0");
-    this->_industrialInsightContainer = std::shared_ptr<Container>(new Container( // NOLINT(modernize-make-shared)
-            {
-                    std::make_shared<Label>("Industrial Building"),
-                    this->_industrialEmployeesCapacity,
-                    this->_industrialProducts,
-                    this->_industrialProductCapacity,
-                    this->_industrialProductMultiplier,
-                    this->_industrialQueryTimer,
-            }));
+                            this->_inGameEventQueue->push<DestroyBuildingRequestEvent>(this->_selection->entity);
+                            this->_selection = std::nullopt;
+                        }
+                    )
+                    .property<BooleanValue>(
+                        "is_residential",
+                        [this]() { return this->_selection.has_value() && this->_selection->residential.has_value(); },
+                        [](bool) {}
+                    )
+                    .property<ObjectValue>(
+                        "residential",
+                        ObjectValue()
+                            .property<StringValue>(
+                                "count",
+                                [this]() { return fmt::format("Count: {}", (*this->_selection->residential)->count); },
+                                [](std::string) {}
+                            )
+                            .property<StringValue>(
+                                "capacity",
+                                [this]() {
+                                    return fmt::format("Capacity: {}", (*this->_selection->residential)->capacity);
+                                },
+                                [](std::string) {}
+                            )
+                            .property<StringValue>(
+                                "groups_count",
+                                [this]() {
+                                    return fmt::format(
+                                        "Count of groups: {}",
+                                        (*this->_selection->residential)->residents.size()
+                                    );
+                                },
+                                [](std::string) {}
+                            )
+                            .property<ListValue<ObjectValue>>("groups")
+                            .property<IntegerValue>("selected_group", -1)
+                    )
+                    .property<BooleanValue>(
+                        "is_industrial",
+                        [this]() { return this->_selection.has_value() && this->_selection->industrial.has_value(); },
+                        [](bool) {}
+                    )
+                    .property<ObjectValue>(
+                        "industrial",
+                        ObjectValue()
+                            .property<StringValue>(
+                                "employees_capacity",
+                                [this]() {
+                                    return fmt::format(
+                                        "Employees Capacity: {}",
+                                        (*this->_selection->industrial)->employeesCapacity
+                                    );
+                                },
+                                [](std::string) {}
+                            )
+                            .property<StringValue>(
+                                "products",
+                                [this]() {
+                                    return fmt::format("Products: {}", (*this->_selection->industrial)->products);
+                                },
+                                [](std::string) {}
+                            )
+                            .property<StringValue>(
+                                "product_capacity",
+                                [this]() {
+                                    return fmt::format(
+                                        "Product Capacity: {}",
+                                        (*this->_selection->industrial)->productCapacity
+                                    );
+                                },
+                                [](std::string) {}
+                            )
+                            .property<StringValue>(
+                                "product_multiplier",
+                                [this]() {
+                                    return fmt::format(
+                                        "Product Multiplier: {}",
+                                        (*this->_selection->industrial)->productMultiplier
+                                    );
+                                },
+                                [](std::string) {}
+                            )
+                            .property<StringValue>(
+                                "query_timer",
+                                [this]() {
+                                    return fmt::format("Query Timer: {}", (*this->_selection->industrial)->queryTimer);
+                                },
+                                [](std::string) {}
+                            )
+                    )
+                    .property<BooleanValue>(
+                        "is_commercial",
+                        [this]() { return this->_selection.has_value() && this->_selection->commercial.has_value(); },
+                        [](bool) {}
+                    )
+                    .property<ObjectValue>(
+                        "commercial",
+                        ObjectValue()
+                            .property<StringValue>(
+                                "happiness",
+                                [this]() {
+                                    return fmt::format("Happiness: {}", (*this->_selection->commercial)->happiness);
+                                },
+                                [](std::string) {}
+                            )
+                            .property<StringValue>(
+                                "happiness_capacity",
+                                [this]() {
+                                    return fmt::format(
+                                        "Happiness Capacity: {}",
+                                        (*this->_selection->commercial)->happinessCapacity
+                                    );
+                                },
+                                [](std::string) {}
+                            )
+                            .property<StringValue>(
+                                "happiness_multiplier",
+                                [this]() {
+                                    return fmt::format(
+                                        "Happiness Multiplier: {}",
+                                        (*this->_selection->commercial)->happinessMultiplier
+                                    );
+                                },
+                                [](std::string) {}
+                            )
+                            .property<StringValue>(
+                                "query_timer",
+                                [this]() {
+                                    return fmt::format("Query Timer: {}", (*this->_selection->commercial)->queryTimer);
+                                },
+                                [](std::string) {}
+                            )
+                    )
+            )
+    );
 
-    this->_commercialHappiness = std::make_shared<Label>("Happiness: 0");
-    this->_commercialHappinessCapacity = std::make_shared<Label>("Happiness Capacity: 0");
-    this->_commercialHappinessMultiplier = std::make_shared<Label>("Happiness Multiplier: 0");
-    this->_commercialQueryTimer = std::make_shared<Label>("Query Timer: 0");
-    this->_commercialInsightContainer = std::shared_ptr<Container>(new Container( // NOLINT(modernize-make-shared)
-            {
-                    std::make_shared<Label>("Commercial Building"),
-                    this->_commercialHappiness,
-                    this->_commercialHappinessCapacity,
-                    this->_commercialHappinessMultiplier,
-                    this->_commercialQueryTimer,
-            }));
+    this->_uiManager->createContext("GameUI");
 
-    this->_selectionWindow = std::shared_ptr<Window>(new Window( // NOLINT(modernize-make-shared)
-            "Selection",
-            {
-                    this->_cellContainer,
-                    this->_buildingContainer,
-                    this->_residentialInsightContainer,
-                    this->_industrialInsightContainer,
-                    this->_commercialInsightContainer,
-            }
-    ));
-    this->_selectionWindow->setVisible(false);
+    this->_inGameEventQueue->addHandler<SelectionChangedEvent>([this,
+                                                                selectionOpened](const SelectionChangedEvent *event) {
+        selectionOpened->setValue(event->getSelection().has_value());
 
-    this->_playerBalanceLabel = std::make_shared<Label>("Balance: 0");
-    this->_playerWindow = std::shared_ptr<Window>(new Window( // NOLINT(modernize-make-shared)
-            "Player",
-            {
-                    this->_playerBalanceLabel
-            }
-    ));
+        if (event->getSelection().has_value()) {
+            const auto entity = *event->getSelection();
 
-    this->_populationIncomeTimerLabel = std::make_shared<Label>("Population income timer: 0");
-    this->_simulationInsightWindow = std::shared_ptr<Window>(new Window( // NOLINT(modernize-make-shared)
-            "Simulation Insight",
-            {
-                    this->_populationIncomeTimerLabel
-            }
-    ));
-
-    this->_uiContext->setRoot("Selection", this->_selectionWindow);
-    this->_uiContext->setRoot("Player", this->_playerWindow);
-    this->_uiContext->setRoot("SimulationInsight", this->_simulationInsightWindow);
-
-    this->_inGameEventQueue->addHandler<SelectionChangedEvent>([this](const SelectionChangedEvent *event) {
-        this->_selection = event->getSelection();
+            this->_selection = SelectionData {
+                .entity = entity,
+                .cell = this->_entityManager->tryGetComponent<GridCellComponent>(entity),
+                .building = this->_entityManager->tryGetComponent<GridBuildingComponent>(entity),
+                .residential = tryGetPointer(this->_citySimulationSystem->getResidentials(), entity),
+                .industrial = tryGetPointer(this->_citySimulationSystem->getIndustrials(), entity),
+                .commercial = tryGetPointer(this->_citySimulationSystem->getCommercials(), entity)
+            };
+        } else {
+            this->_selection = std::nullopt;
+        }
     });
 }
 
 void GameUISystem::destroy() {
-    this->_uiContext->removeRoot("Selection");
-    this->_uiContext->removeRoot("Player");
-    this->_uiContext->removeRoot("SimulationInsight");
+    this->_uiManager->destroyContext("GameUI");
+}
 
-    this->_selectionWindow = nullptr;
-    this->_playerWindow = nullptr;
-    this->_simulationInsightWindow = nullptr;
+void GameUISystem::run() {
+    this->_uiManager->addLayoutToContext("GameUI", "layouts/selection.asset", std::shared_ptr(this->_rootContext));
+    this->_uiManager->addLayoutToContext("GameUI", "layouts/player.asset", std::shared_ptr(this->_rootContext));
+    this->_uiManager->addLayoutToContext("GameUI", "layouts/simulation.asset", std::shared_ptr(this->_rootContext));
+}
+
+void GameUISystem::stop() {
+    //
 }
 
 void GameUISystem::update(float) {
-
-    this->_playerBalanceLabel->setText(fmt::format("Balance: {}", this->_playerStateContext->balance()));
-    this->_populationIncomeTimerLabel->setText(
-            fmt::format("Population income timer: {}", this->_citySimulationSystem->getPopulationIncomeTimer())
-    );
-
-    this->_selectionWindow->setVisible(this->_selection.has_value());
-
-    if (this->_selection.has_value()) {
-        this->_cellContainer->setVisible(this->_entityManager->hasComponent<GridCellComponent>(*this->_selection));
-
-        auto maybeBuilding = this->_entityManager->tryGetComponent<GridBuildingComponent>(*this->_selection);
-
-        this->_buildingContainer->setVisible(maybeBuilding.has_value());
-        this->_residentialInsightContainer->setVisible(maybeBuilding.has_value() &&
-                                                       (*maybeBuilding)->buildingType() == BuildingType::Residential);
-        this->_industrialInsightContainer->setVisible(maybeBuilding.has_value() &&
-                                                      (*maybeBuilding)->buildingType() == BuildingType::Industrial);
-        this->_commercialInsightContainer->setVisible(maybeBuilding.has_value() &&
-                                                      (*maybeBuilding)->buildingType() == BuildingType::Commercial);
-
-        if (maybeBuilding.has_value()) {
-            switch ((*maybeBuilding)->buildingType()) {
-                case BuildingType::Residential: {
-                    auto maybeResidential = tryGetPointer(this->_citySimulationSystem->getResidentials(),
-                                                          *this->_selection);
-
-                    if (maybeResidential.has_value()) {
-                        this->_residentialCount->setText(
-                                fmt::format("Count: {}", (*maybeResidential)->count));
-
-                        this->_residentialCapacity->setText(
-                                fmt::format("Capacity: {}", (*maybeResidential)->capacity));
-
-                        this->_residentialGroupsCount->setText(
-                                fmt::format("Count of groups: {}", (*maybeResidential)->residents.size()));
-
-                        std::uint32_t idx = 0;
-                        std::vector<ListBox::Item> items;
-
-                        for (const auto &resident: (*maybeResidential)->residents) {
-                            auto item = fmt::format(
-                                    "[{}] count = {}\n"
-                                    "     happiness = {}\n"
-                                    "     money = {}\n"
-                                    "     happiness timer = {}\n"
-                                    "     rest timer = {} \n",
-                                    idx, resident.count, resident.happiness, resident.money,
-                                    resident.happinessTimer, resident.restTimer);
-
-                            items.emplace_back(idx++, item);
-                        }
-
-                        this->_residentialGroups->setItems(std::forward<decltype(items)>(items));
-                    }
-
-                    break;
-                }
-
-                case BuildingType::Industrial: {
-                    auto maybeIndustrial = tryGetPointer(this->_citySimulationSystem->getIndustrials(),
-                                                         *this->_selection);
-
-                    if (maybeIndustrial.has_value()) {
-                        this->_industrialEmployeesCapacity->setText(
-                                fmt::format("Employees Capacity: {}", (*maybeIndustrial)->employeesCapacity));
-
-                        this->_industrialProducts->setText(
-                                fmt::format("Products: {}", (*maybeIndustrial)->products));
-
-                        this->_industrialProductCapacity->setText(
-                                fmt::format("Product Capacity: {}", (*maybeIndustrial)->productCapacity));
-
-                        this->_industrialProductMultiplier->setText(
-                                fmt::format("Product Multiplier: {}", (*maybeIndustrial)->productMultiplier));
-
-                        this->_industrialQueryTimer->setText(
-                                fmt::format("Query Timer: {}", (*maybeIndustrial)->queryTimer));
-                    }
-
-                    break;
-                }
-
-                case BuildingType::Commercial: {
-                    auto maybeCommercial = tryGetPointer(this->_citySimulationSystem->getCommercials(),
-                                                         *this->_selection);
-
-                    if (maybeCommercial.has_value()) {
-                        this->_commercialHappiness->setText(
-                                fmt::format("Happiness: {}", (*maybeCommercial)->happiness));
-
-                        this->_commercialHappinessCapacity->setText(
-                                fmt::format("Happiness Capacity: {}", (*maybeCommercial)->happinessCapacity));
-
-                        this->_commercialHappinessMultiplier->setText(
-                                fmt::format("Happiness Multiplier: {}", (*maybeCommercial)->happinessMultiplier));
-
-                        this->_commercialQueryTimer->setText(
-                                fmt::format("Query Timer: {}", (*maybeCommercial)->queryTimer));
-                    }
-
-                    break;
-                }
-
-                default:
-                    throw std::logic_error("Building type is not supported");
-            }
-        }
-    }
+    //
 }

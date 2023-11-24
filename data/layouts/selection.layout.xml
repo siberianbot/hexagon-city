@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<window title="Selection" context="${selection}" opened="${selection_opened}">
+
+    <group visible="${is_cell}">
+        <select items="${building_types}" selection="${selected_building_type}"/>
+        <button title="Create building" action="${create_building}"/>
+    </group>
+
+    <group visible="${is_building}">
+        <button title="Upgrade building" action="${upgrade_building}"/>
+        <button title="Destroy building" action="${destroy_building}"/>
+    </group>
+
+    <group visible="${is_residential}" context="${residential}">
+        <label text="Residential building"/>
+        <label text="${count}"/>
+        <label text="${capacity}"/>
+        <label text="${groups_count}"/>
+        <list items="${groups}" selection="${selected_group}">
+            <list-item>
+                <label text="${number}"/>
+                <label text="${count}"/>
+                <label text="${happiness}"/>
+                <label text="${money}"/>
+                <label text="${happiness_timer}"/>
+                <label text="${rest_timer}"/>
+            </list-item>
+        </list>
+    </group>
+
+    <group visible="${is_industrial}" context="${industrial}">
+        <label text="Industrial building"/>
+        <label text="${employees_capacity}"/>
+        <label text="${products}"/>
+        <label text="${product_capacity}"/>
+        <label text="${product_multiplier}"/>
+        <label text="${query_timer}"/>
+    </group>
+
+    <group visible="${is_commercial}" context="${commercial}">
+        <label text="Commercial building"/>
+        <label text="${happiness}"/>
+        <label text="${happiness_capacity}"/>
+        <label text="${happiness_multiplier}"/>
+        <label text="${query_timer}"/>
+    </group>
+
+</window>

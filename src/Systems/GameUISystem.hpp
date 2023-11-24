@@ -9,19 +9,21 @@
 #include <Penrose/ECS/System.hpp>
 #include <Penrose/Resources/Initializable.hpp>
 #include <Penrose/Resources/ResourceSet.hpp>
+#include <Penrose/Resources/Runnable.hpp>
+#include <Penrose/UI/UIManager.hpp>
 
-#include <Penrose/Builtin/Debug/UI/UIContext.hpp>
-#include <Penrose/Builtin/Debug/UI/Widgets.hpp>
-
+#include "src/Components/GridBuildingComponent.hpp"
+#include "src/Components/GridCellComponent.hpp"
 #include "src/InGameEvents.hpp"
 #include "src/PlayerStateContext.hpp"
-#include "CitySimulationSystem.hpp"
+#include "src/Systems/CitySimulationSystem.hpp"
 
 using namespace Penrose;
 
-class GameUISystem : public Resource<GameUISystem, ResourceGroup::ECSSystem>,
-                     public Initializable,
-                     public System {
+class GameUISystem: public Resource<GameUISystem, ResourceGroup::ECSSystem>,
+                    public Initializable,
+                    public Runnable,
+                    public System {
 public:
     explicit GameUISystem(ResourceSet *resources);
     ~GameUISystem() override = default;
@@ -29,47 +31,31 @@ public:
     void init() override;
     void destroy() override;
 
+    void run() override;
+    void stop() override;
+
     void update(float) override;
 
     [[nodiscard]] std::string getName() const override { return "GameUI"; }
 
 private:
+    struct SelectionData {
+        Entity entity;
+        std::optional<std::shared_ptr<GridCellComponent>> cell;
+        std::optional<std::shared_ptr<GridBuildingComponent>> building;
+        std::optional<const CitySimulationSystem::ResidentialData *> residential;
+        std::optional<const CitySimulationSystem::IndustrialData *> industrial;
+        std::optional<const CitySimulationSystem::CommercialData *> commercial;
+    };
+
     ResourceProxy<EntityManager> _entityManager;
     ResourceProxy<InGameEventQueue> _inGameEventQueue;
-    ResourceProxy<UIContext> _uiContext;
+    ResourceProxy<UIManager> _uiManager;
     ResourceProxy<CitySimulationSystem> _citySimulationSystem;
     ResourceProxy<PlayerStateContext> _playerStateContext;
 
-    std::shared_ptr<Container> _cellContainer;
-    std::shared_ptr<Container> _buildingContainer;
-    std::shared_ptr<Window> _selectionWindow;
-
-    std::shared_ptr<Label> _residentialCount;
-    std::shared_ptr<Label> _residentialCapacity;
-    std::shared_ptr<Label> _residentialGroupsCount;
-    std::shared_ptr<ListBox> _residentialGroups;
-    std::shared_ptr<Container> _residentialInsightContainer;
-
-    std::shared_ptr<Label> _industrialEmployeesCapacity;
-    std::shared_ptr<Label> _industrialProducts;
-    std::shared_ptr<Label> _industrialProductCapacity;
-    std::shared_ptr<Label> _industrialProductMultiplier;
-    std::shared_ptr<Label> _industrialQueryTimer;
-    std::shared_ptr<Container> _industrialInsightContainer;
-
-    std::shared_ptr<Label> _commercialHappiness;
-    std::shared_ptr<Label> _commercialHappinessCapacity;
-    std::shared_ptr<Label> _commercialHappinessMultiplier;
-    std::shared_ptr<Label> _commercialQueryTimer;
-    std::shared_ptr<Container> _commercialInsightContainer;
-
-    std::shared_ptr<Label> _playerBalanceLabel;
-    std::shared_ptr<Window> _playerWindow;
-
-    std::shared_ptr<Label> _populationIncomeTimerLabel;
-    std::shared_ptr<Window> _simulationInsightWindow;
-
-    std::optional<Entity> _selection;
+    std::shared_ptr<ObjectValue> _rootContext;
+    std::optional<SelectionData> _selection;
 };
 
 #endif // HEXAGON_CITY_SYSTEMS_GAME_UI_SYSTEM_HPP

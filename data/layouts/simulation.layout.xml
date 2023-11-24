@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<window title="Simulation Insight" context="${simulation}">
+    <label text="${population_income_timer}"/>
+</window>

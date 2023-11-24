@@ -1,11 +1,12 @@
 project(
     'hexagon-city',
-     'cpp',
-     version: '0.1',
-     default_options: [
-         'warning_level=3',
-         'cpp_std=c++20'
-     ])
+    'cpp',
+    version : '0.1',
+    default_options : [
+        'warning_level=3',
+        'cpp_std=c++20',
+        'default_library=static'
+    ])
 
 deps = [
     dependency('penrose'),
@@ -30,4 +31,4 @@ src = [
     'src/Raycaster.cpp',
 ]
 
-executable('hexagon_city', src, dependencies: deps)
+executable('hexagon_city', src, dependencies : deps)

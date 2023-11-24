@@ -1,5 +1,7 @@
 #include "DebugCameraSystem.hpp"
 
+#include <algorithm>
+
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <Penrose/Math/Constants.hpp>
